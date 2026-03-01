@@ -5,13 +5,14 @@ import { toast } from "sonner";
 import {
   Download, Edit2, Trash2, Save, X, Search, ChevronDown, ChevronUp,
   TrendingUp, TrendingDown, Plus, Eye, Copy, CreditCard, Receipt,
-  FileText, RefreshCw, Upload as UploadIcon
+  FileText, RefreshCw, Upload as UploadIcon, User
 } from "lucide-react";
 import { generateInvoice, CompanyInfo, InvoicePayment } from "@/lib/invoiceGenerator";
 import { useIsViewer } from "@/components/admin/AdminLayout";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import AdminActionMenu, { ActionItem } from "@/components/admin/AdminActionMenu";
+import CustomerSearchSelect from "@/components/admin/CustomerSearchSelect";
 
 const inputClass = "w-full bg-secondary border border-border rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40";
 const STATUSES = ["pending", "confirmed", "visa_processing", "ticket_issued", "completed", "cancelled"];
@@ -160,6 +161,9 @@ export default function AdminBookingsPage() {
     setEditForm({
       status: b.status, total_amount: b.total_amount, notes: b.notes || "",
       num_travelers: b.num_travelers, paid_amount: Number(b.paid_amount || 0),
+      guest_name: b.guest_name || "", guest_phone: b.guest_phone || "",
+      guest_email: b.guest_email || "", guest_address: b.guest_address || "",
+      guest_passport: b.guest_passport || "", user_id: b.user_id || null,
     });
   };
 
@@ -173,6 +177,9 @@ export default function AdminBookingsPage() {
     const { error } = await supabase.from("bookings").update({
       status: editForm.status, total_amount: total, paid_amount: paid,
       due_amount: due, notes: editForm.notes || null, num_travelers: parseInt(editForm.num_travelers),
+      guest_name: editForm.guest_name?.trim() || null, guest_phone: editForm.guest_phone?.trim() || null,
+      guest_email: editForm.guest_email?.trim() || null, guest_address: editForm.guest_address?.trim() || null,
+      guest_passport: editForm.guest_passport?.trim() || null, user_id: editForm.user_id || null,
     }).eq("id", editingId);
     if (error) { toast.error(error.message); return; }
     toast.success("বুকিং আপডেট হয়েছে");
@@ -263,7 +270,7 @@ export default function AdminBookingsPage() {
       {filtered.map((b: any) => (
         <div key={b.id} className="bg-card border border-border rounded-lg p-4 cursor-pointer hover:border-primary/30 transition-colors" onClick={() => { if (editingId !== b.id) setViewBooking(b); }}>
           {editingId === b.id ? (
-            <div className="space-y-3">
+            <div className="space-y-3" onClick={(e) => e.stopPropagation()}>
               <div className="flex justify-between items-center">
                 <p className="font-mono font-bold text-primary text-sm">{b.tracking_id}</p>
                 <div className="flex gap-2">
@@ -271,6 +278,46 @@ export default function AdminBookingsPage() {
                   <button onClick={() => setEditingId(null)} className="text-xs bg-secondary text-foreground px-3 py-1.5 rounded-md flex items-center gap-1"><X className="h-3 w-3" /> বাতিল</button>
                 </div>
               </div>
+
+              {/* Customer Search */}
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1">কাস্টমার পরিবর্তন</label>
+                <CustomerSearchSelect
+                  selectedId={editForm.user_id}
+                  onSelect={(c) => {
+                    if (c) {
+                      setEditForm((f: any) => ({
+                        ...f, user_id: c.user_id,
+                        guest_name: c.full_name || "", guest_phone: c.phone || "",
+                        guest_email: c.email || "", guest_address: c.address || "",
+                        guest_passport: c.passport_number || "",
+                      }));
+                    } else {
+                      setEditForm((f: any) => ({
+                        ...f, user_id: null,
+                        guest_name: "", guest_phone: "", guest_email: "",
+                        guest_address: "", guest_passport: "",
+                      }));
+                    }
+                  }}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="text-xs text-muted-foreground block mb-1">কাস্টমার নাম</label>
+                  <input className={inputClass} value={editForm.guest_name} onChange={(e) => setEditForm({ ...editForm, guest_name: e.target.value })} placeholder="নাম" />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground block mb-1">ফোন</label>
+                  <input className={inputClass} value={editForm.guest_phone} onChange={(e) => setEditForm({ ...editForm, guest_phone: e.target.value })} placeholder="ফোন" />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground block mb-1">পাসপোর্ট</label>
+                  <input className={inputClass} value={editForm.guest_passport} onChange={(e) => setEditForm({ ...editForm, guest_passport: e.target.value })} placeholder="পাসপোর্ট" />
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                 <div>
                   <label className="text-xs text-muted-foreground block mb-1">স্ট্যাটাস</label>
