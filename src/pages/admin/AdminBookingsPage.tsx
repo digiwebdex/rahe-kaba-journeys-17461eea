@@ -23,16 +23,19 @@ const fmt = (n: number) => `৳${Number(n || 0).toLocaleString()}`;
 function BookingDetail({ bookingId }: { bookingId: string }) {
   const [payments, setPayments] = useState<any[]>([]);
   const [expenses, setExpenses] = useState<any[]>([]);
+  const [members, setMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
-      const [payRes, expRes] = await Promise.all([
+      const [payRes, expRes, memRes] = await Promise.all([
         supabase.from("payments").select("*").eq("booking_id", bookingId).order("installment_number", { ascending: true }),
         supabase.from("expenses").select("*").eq("booking_id", bookingId).order("date", { ascending: false }),
+        supabase.from("booking_members").select("*, packages(name)").eq("booking_id", bookingId).order("created_at", { ascending: true }),
       ]);
       setPayments(payRes.data || []);
       setExpenses(expRes.data || []);
+      setMembers(memRes.data || []);
       setLoading(false);
     };
     load();
@@ -209,7 +212,7 @@ export default function AdminBookingsPage() {
       moallem_id: editForm.moallem_id || null,
     }).eq("id", editingId);
     if (error) { toast.error(error.message); return; }
-    toast.success("বুকিং আপডেট হয়েছে");
+    toast.success("Booking updated successfully");
     setEditingId(null);
     fetchBookings();
   };
@@ -234,7 +237,7 @@ export default function AdminBookingsPage() {
       status: "pending", paid_amount: 0, due_amount: Number(b.total_amount),
     });
     if (error) { toast.error(error.message); return; }
-    toast.success("বুকিং ডুপ্লিকেট হয়েছে");
+    toast.success("Booking duplicated");
     fetchBookings();
   };
 
@@ -242,7 +245,7 @@ export default function AdminBookingsPage() {
     if (!statusChangeId || !statusChangeVal) return;
     const { error } = await supabase.from("bookings").update({ status: statusChangeVal }).eq("id", statusChangeId);
     if (error) { toast.error(error.message); return; }
-    toast.success("স্ট্যাটাস পরিবর্তন হয়েছে");
+    toast.success("Status updated");
     setStatusChangeId(null);
     fetchBookings();
   };
@@ -283,7 +286,7 @@ export default function AdminBookingsPage() {
           {!isViewer && (
             <button onClick={() => navigate("/admin/bookings/create")}
               className="inline-flex items-center gap-1.5 text-sm bg-gradient-gold text-primary-foreground font-semibold px-4 py-2 rounded-md hover:opacity-90 transition-opacity shadow-gold">
-              <Plus className="h-4 w-4" /> নতুন বুকিং
+              <Plus className="h-4 w-4" /> New Booking
             </button>
           )}
           <div className="relative flex-1 sm:w-64">
@@ -300,14 +303,14 @@ export default function AdminBookingsPage() {
               <div className="flex justify-between items-center">
                 <p className="font-mono font-bold text-primary text-sm">{b.tracking_id}</p>
                 <div className="flex gap-2">
-                  <button onClick={saveEdit} className="text-xs bg-primary text-primary-foreground px-3 py-1.5 rounded-md flex items-center gap-1"><Save className="h-3 w-3" /> সেভ</button>
-                  <button onClick={() => setEditingId(null)} className="text-xs bg-secondary text-foreground px-3 py-1.5 rounded-md flex items-center gap-1"><X className="h-3 w-3" /> বাতিল</button>
+                  <button onClick={saveEdit} className="text-xs bg-primary text-primary-foreground px-3 py-1.5 rounded-md flex items-center gap-1"><Save className="h-3 w-3" /> Save</button>
+                  <button onClick={() => setEditingId(null)} className="text-xs bg-secondary text-foreground px-3 py-1.5 rounded-md flex items-center gap-1"><X className="h-3 w-3" /> Cancel</button>
                 </div>
               </div>
 
               {/* Customer Search */}
               <div>
-                <label className="text-xs text-muted-foreground block mb-1">কাস্টমার পরিবর্তন</label>
+                <label className="text-xs text-muted-foreground block mb-1">Change Customer</label>
                 <CustomerSearchSelect
                   selectedId={editForm.user_id}
                   onSelect={(c) => {
@@ -331,49 +334,49 @@ export default function AdminBookingsPage() {
 
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="text-xs text-muted-foreground block mb-1">কাস্টমার নাম</label>
-                  <input className={inputClass} value={editForm.guest_name} onChange={(e) => setEditForm({ ...editForm, guest_name: e.target.value })} placeholder="নাম" />
+                  <label className="text-xs text-muted-foreground block mb-1">Customer Name</label>
+                  <input className={inputClass} value={editForm.guest_name} onChange={(e) => setEditForm({ ...editForm, guest_name: e.target.value })} placeholder="Name" />
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground block mb-1">ফোন</label>
+                  <label className="text-xs text-muted-foreground block mb-1">Phone</label>
                   <input className={inputClass} value={editForm.guest_phone} onChange={(e) => handlePhoneChange(e.target.value, (v) => setEditForm({ ...editForm, guest_phone: v }))} placeholder="01XXXXXXXXX" maxLength={15} />
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground block mb-1">পাসপোর্ট</label>
-                  <input className={inputClass} value={editForm.guest_passport} onChange={(e) => setEditForm({ ...editForm, guest_passport: e.target.value })} placeholder="পাসপোর্ট" />
+                  <label className="text-xs text-muted-foreground block mb-1">Passport</label>
+                  <input className={inputClass} value={editForm.guest_passport} onChange={(e) => setEditForm({ ...editForm, guest_passport: e.target.value })} placeholder="Passport" />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div>
-                  <label className="text-xs text-muted-foreground block mb-1">বিক্রয় মূল্য/ব্যক্তি (৳)</label>
+                  <label className="text-xs text-muted-foreground block mb-1">Selling Price/Person (৳)</label>
                   <input className={inputClass} type="number" min={0} value={editForm.selling_price_per_person}
                     onChange={(e) => setEditForm((f: any) => ({ ...f, selling_price_per_person: e.target.value }))} />
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground block mb-1">ক্রয় মূল্য/ব্যক্তি (৳)</label>
+                  <label className="text-xs text-muted-foreground block mb-1">Cost Price/Person (৳)</label>
                   <input className={inputClass} type="number" min={0} value={editForm.cost_price_per_person}
                     onChange={(e) => setEditForm((f: any) => ({ ...f, cost_price_per_person: e.target.value }))} />
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground block mb-1">অতিরিক্ত খরচ (৳)</label>
+                  <label className="text-xs text-muted-foreground block mb-1">Extra Expense (৳)</label>
                   <input className={inputClass} type="number" min={0} value={editForm.extra_expense}
                     onChange={(e) => setEditForm((f: any) => ({ ...f, extra_expense: e.target.value }))} />
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground block mb-1">যাত্রী</label>
+                  <label className="text-xs text-muted-foreground block mb-1">Travelers</label>
                   <input className={inputClass} type="number" min={1} value={editForm.num_travelers} onChange={(e) => setEditForm({ ...editForm, num_travelers: e.target.value })} />
                 </div>
               </div>
               {editForm.moallem_id && (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   <div>
-                    <label className="text-xs text-muted-foreground block mb-1">কমিশন/ব্যক্তি (৳)</label>
+                    <label className="text-xs text-muted-foreground block mb-1">Commission/Person (৳)</label>
                     <input className={inputClass} type="number" min={0} value={editForm.commission_per_person}
                       onChange={(e) => setEditForm((f: any) => ({ ...f, commission_per_person: e.target.value }))} />
                   </div>
                   <div>
-                    <label className="text-xs text-muted-foreground block mb-1">মোট কমিশন (৳)</label>
+                    <label className="text-xs text-muted-foreground block mb-1">Total Commission (৳)</label>
                     <div className={`${inputClass} bg-muted/50 font-bold`}>৳{editTotalCommission.toLocaleString()}</div>
                   </div>
                 </div>
@@ -381,28 +384,28 @@ export default function AdminBookingsPage() {
 
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                 <div>
-                  <label className="text-xs text-muted-foreground block mb-1">স্ট্যাটাস</label>
+                  <label className="text-xs text-muted-foreground block mb-1">Status</label>
                   <select className={inputClass} value={editForm.status} onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}>
                     {STATUSES.map((s) => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1).replace("_", " ")}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground block mb-1">মোট বিক্রয় (৳)</label>
+                  <label className="text-xs text-muted-foreground block mb-1">Total Selling (৳)</label>
                   <div className={`${inputClass} bg-muted/50 font-bold`}>৳{editTotalSelling.toLocaleString()}</div>
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground block mb-1">পরিশোধিত (৳)</label>
+                  <label className="text-xs text-muted-foreground block mb-1">Paid (৳)</label>
                   <input className={inputClass} type="number" min={0} max={editTotalSelling} value={editForm.paid_amount}
                     onChange={(e) => setEditForm((f: any) => ({ ...f, paid_amount: Math.min(Math.max(0, parseFloat(e.target.value) || 0), editTotalSelling) }))} />
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground block mb-1">বকেয়া (৳)</label>
+                  <label className="text-xs text-muted-foreground block mb-1">Due (৳)</label>
                   <div className={`${inputClass} bg-muted/50 font-bold ${editDue > 0 ? "text-destructive" : "text-emerald"}`}>
                     ৳{editDue.toLocaleString()}
                   </div>
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground block mb-1">লাভ (৳)</label>
+                  <label className="text-xs text-muted-foreground block mb-1">Profit (৳)</label>
                   <div className={`${inputClass} bg-muted/50 font-bold ${editProfit >= 0 ? "text-emerald" : "text-destructive"}`}>
                     ৳{editProfit.toLocaleString()}
                   </div>
@@ -410,17 +413,17 @@ export default function AdminBookingsPage() {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-muted-foreground block mb-1">মোয়াল্লেম (ঐচ্ছিক)</label>
+                  <label className="text-xs text-muted-foreground block mb-1">Moallem (Optional)</label>
                   <select className={inputClass} value={editForm.moallem_id || ""} onChange={(e) => setEditForm({ ...editForm, moallem_id: e.target.value })}>
-                    <option value="">-- মোয়াল্লেম নেই --</option>
+                    <option value="">-- No Moallem --</option>
                     {moallems.map((m: any) => (
                       <option key={m.id} value={m.id}>{m.name} {m.phone ? `(${m.phone})` : ""}</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground block mb-1">নোট</label>
-                  <input className={inputClass} value={editForm.notes} onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })} placeholder="অতিরিক্ত তথ্য..." />
+                  <label className="text-xs text-muted-foreground block mb-1">Notes</label>
+                  <input className={inputClass} value={editForm.notes} onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })} placeholder="Additional info..." />
                 </div>
               </div>
             </div>
@@ -428,8 +431,8 @@ export default function AdminBookingsPage() {
             <>
               <div className="flex justify-between items-start mb-3">
                 <div>
-                  <p className="font-mono font-bold text-primary text-sm">{b.tracking_id}</p>
-                  <p className="text-sm text-muted-foreground">{b.guest_name || "Unknown"}{b.guest_passport ? ` (${b.guest_passport})` : ""} • {b.packages?.name || "N/A"}{b.moallems?.name ? ` • মোয়াল্লেম: ${b.moallems.name}` : ""}</p>
+                  <p className="font-mono font-bold text-primary text-sm">{b.tracking_id}{b.booking_type === "family" ? <Badge variant="outline" className="ml-2 text-[10px]">Family</Badge> : ""}</p>
+                  <p className="text-sm text-muted-foreground">{b.guest_name || "Unknown"}{b.guest_passport ? ` (${b.guest_passport})` : ""} • {b.packages?.name || "N/A"}{b.moallems?.name ? ` • Moallem: ${b.moallems.name}` : ""}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className={`text-xs font-semibold px-2 py-0.5 rounded-full capitalize ${b.status === "completed" ? "text-emerald bg-emerald/10" : b.status === "cancelled" ? "text-destructive bg-destructive/10" : "text-primary bg-primary/10"}`}>
@@ -468,42 +471,43 @@ export default function AdminBookingsPage() {
       <Dialog open={!!viewBooking} onOpenChange={(o) => { if (!o) setViewBooking(null); }}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="font-heading">বুকিং বিবরণ — {viewBooking?.tracking_id}</DialogTitle>
+            <DialogTitle className="font-heading">Booking Details — {viewBooking?.tracking_id}</DialogTitle>
           </DialogHeader>
           {viewBooking && (
             <div className="space-y-4">
+              {viewBooking.booking_type === "family" && <Badge variant="outline" className="text-xs">Family Booking</Badge>}
               <div className="grid grid-cols-2 gap-3 text-sm">
-                <div><span className="text-muted-foreground text-xs block">কাস্টমার</span><span className="font-medium">{viewBooking.guest_name || "—"}</span></div>
-                <div><span className="text-muted-foreground text-xs block">ফোন</span><span className="font-medium">{viewBooking.guest_phone || "—"}</span></div>
-                <div><span className="text-muted-foreground text-xs block">প্যাকেজ</span><span className="font-medium">{viewBooking.packages?.name || "—"}</span></div>
-                <div><span className="text-muted-foreground text-xs block">যাত্রী</span><span className="font-medium">{viewBooking.num_travelers}</span></div>
-                <div><span className="text-muted-foreground text-xs block">বিক্রয় মূল্য/ব্যক্তি</span><span className="font-medium">{fmt(Number(viewBooking.selling_price_per_person || 0))}</span></div>
-                <div><span className="text-muted-foreground text-xs block">মোট বিক্রয়</span><span className="font-medium">{fmt(Number(viewBooking.total_amount))}</span></div>
-                <div><span className="text-muted-foreground text-xs block">ক্রয় মূল্য/ব্যক্তি</span><span className="font-medium">{fmt(Number(viewBooking.cost_price_per_person || 0))}</span></div>
-                <div><span className="text-muted-foreground text-xs block">মোট ক্রয়</span><span className="font-medium">{fmt(Number(viewBooking.total_cost || 0))}</span></div>
-                <div><span className="text-muted-foreground text-xs block">অতিরিক্ত খরচ</span><span className="font-medium">{fmt(Number(viewBooking.extra_expense || 0))}</span></div>
+                <div><span className="text-muted-foreground text-xs block">Customer</span><span className="font-medium">{viewBooking.guest_name || "—"}</span></div>
+                <div><span className="text-muted-foreground text-xs block">Phone</span><span className="font-medium">{viewBooking.guest_phone || "—"}</span></div>
+                <div><span className="text-muted-foreground text-xs block">Package</span><span className="font-medium">{viewBooking.packages?.name || "—"}</span></div>
+                <div><span className="text-muted-foreground text-xs block">Travelers</span><span className="font-medium">{viewBooking.num_travelers}</span></div>
+                <div><span className="text-muted-foreground text-xs block">Selling/Person</span><span className="font-medium">{fmt(Number(viewBooking.selling_price_per_person || 0))}</span></div>
+                <div><span className="text-muted-foreground text-xs block">Total Selling</span><span className="font-medium">{fmt(Number(viewBooking.total_amount))}</span></div>
+                <div><span className="text-muted-foreground text-xs block">Cost/Person</span><span className="font-medium">{fmt(Number(viewBooking.cost_price_per_person || 0))}</span></div>
+                <div><span className="text-muted-foreground text-xs block">Total Cost</span><span className="font-medium">{fmt(Number(viewBooking.total_cost || 0))}</span></div>
+                <div><span className="text-muted-foreground text-xs block">Extra Expense</span><span className="font-medium">{fmt(Number(viewBooking.extra_expense || 0))}</span></div>
                 {viewBooking.moallem_id && <>
-                  <div><span className="text-muted-foreground text-xs block">কমিশন/ব্যক্তি</span><span className="font-medium">{fmt(Number(viewBooking.commission_per_person || 0))}</span></div>
-                  <div><span className="text-muted-foreground text-xs block">মোট কমিশন</span><span className="font-medium">{fmt(Number(viewBooking.total_commission || 0))}</span></div>
-                  <div><span className="text-muted-foreground text-xs block">কমিশন পরিশোধিত</span><span className="font-medium text-emerald-500">{fmt(Number(viewBooking.commission_paid || 0))}</span></div>
-                  <div><span className="text-muted-foreground text-xs block">কমিশন বকেয়া</span><span className="font-medium text-destructive">{fmt(Number(viewBooking.commission_due || 0))}</span></div>
+                  <div><span className="text-muted-foreground text-xs block">Commission/Person</span><span className="font-medium">{fmt(Number(viewBooking.commission_per_person || 0))}</span></div>
+                  <div><span className="text-muted-foreground text-xs block">Total Commission</span><span className="font-medium">{fmt(Number(viewBooking.total_commission || 0))}</span></div>
+                  <div><span className="text-muted-foreground text-xs block">Commission Paid</span><span className="font-medium text-emerald-500">{fmt(Number(viewBooking.commission_paid || 0))}</span></div>
+                  <div><span className="text-muted-foreground text-xs block">Commission Due</span><span className="font-medium text-destructive">{fmt(Number(viewBooking.commission_due || 0))}</span></div>
                 </>}
-                <div><span className="text-muted-foreground text-xs block">সাপ্লায়ার পরিশোধিত</span><span className="font-medium text-emerald-500">{fmt(Number(viewBooking.paid_to_supplier || 0))}</span></div>
-                <div><span className="text-muted-foreground text-xs block">সাপ্লায়ার বকেয়া</span><span className="font-medium text-destructive">{fmt(Number(viewBooking.supplier_due || 0))}</span></div>
+                <div><span className="text-muted-foreground text-xs block">Supplier Paid</span><span className="font-medium text-emerald-500">{fmt(Number(viewBooking.paid_to_supplier || 0))}</span></div>
+                <div><span className="text-muted-foreground text-xs block">Supplier Due</span><span className="font-medium text-destructive">{fmt(Number(viewBooking.supplier_due || 0))}</span></div>
                 {viewBooking.moallem_id && <>
-                  <div><span className="text-muted-foreground text-xs block">মোয়াল্লেম পরিশোধিত</span><span className="font-medium text-emerald-500">{fmt(Number(viewBooking.paid_by_moallem || 0))}</span></div>
-                  <div><span className="text-muted-foreground text-xs block">মোয়াল্লেম বকেয়া</span><span className="font-medium text-destructive">{fmt(Number(viewBooking.moallem_due || 0))}</span></div>
+                  <div><span className="text-muted-foreground text-xs block">Moallem Paid</span><span className="font-medium text-emerald-500">{fmt(Number(viewBooking.paid_by_moallem || 0))}</span></div>
+                  <div><span className="text-muted-foreground text-xs block">Moallem Due</span><span className="font-medium text-destructive">{fmt(Number(viewBooking.moallem_due || 0))}</span></div>
                 </>}
-                <div><span className="text-muted-foreground text-xs block">পরিশোধিত</span><span className="font-medium text-emerald-500">{fmt(Number(viewBooking.paid_amount))}</span></div>
-                <div><span className="text-muted-foreground text-xs block">বকেয়া</span><span className="font-medium text-destructive">{fmt(Number(viewBooking.due_amount || 0))}</span></div>
-                <div><span className="text-muted-foreground text-xs block">লাভ</span><span className={`font-medium ${Number(viewBooking.profit_amount || 0) >= 0 ? "text-emerald-500" : "text-destructive"}`}>{fmt(Number(viewBooking.profit_amount || 0))}</span></div>
-                <div><span className="text-muted-foreground text-xs block">স্ট্যাটাস</span><Badge variant={viewBooking.status === "completed" ? "default" : "secondary"} className="text-xs capitalize">{viewBooking.status}</Badge></div>
-                <div><span className="text-muted-foreground text-xs block">পাসপোর্ট</span><span className="font-medium">{viewBooking.guest_passport || "—"}</span></div>
-                <div><span className="text-muted-foreground text-xs block">মোয়াল্লেম</span><span className="font-medium">{viewBooking.moallems?.name || "—"}</span></div>
-                <div><span className="text-muted-foreground text-xs block">তারিখ</span><span className="font-medium">{new Date(viewBooking.created_at).toLocaleDateString()}</span></div>
+                <div><span className="text-muted-foreground text-xs block">Paid</span><span className="font-medium text-emerald-500">{fmt(Number(viewBooking.paid_amount))}</span></div>
+                <div><span className="text-muted-foreground text-xs block">Due</span><span className="font-medium text-destructive">{fmt(Number(viewBooking.due_amount || 0))}</span></div>
+                <div><span className="text-muted-foreground text-xs block">Profit</span><span className={`font-medium ${Number(viewBooking.profit_amount || 0) >= 0 ? "text-emerald-500" : "text-destructive"}`}>{fmt(Number(viewBooking.profit_amount || 0))}</span></div>
+                <div><span className="text-muted-foreground text-xs block">Status</span><Badge variant={viewBooking.status === "completed" ? "default" : "secondary"} className="text-xs capitalize">{viewBooking.status}</Badge></div>
+                <div><span className="text-muted-foreground text-xs block">Passport</span><span className="font-medium">{viewBooking.guest_passport || "—"}</span></div>
+                <div><span className="text-muted-foreground text-xs block">Moallem</span><span className="font-medium">{viewBooking.moallems?.name || "—"}</span></div>
+                <div><span className="text-muted-foreground text-xs block">Date</span><span className="font-medium">{new Date(viewBooking.created_at).toLocaleDateString()}</span></div>
               </div>
               {viewBooking.notes && (
-                <div><span className="text-muted-foreground text-xs block">নোট</span><p className="text-sm">{viewBooking.notes}</p></div>
+                <div><span className="text-muted-foreground text-xs block">Notes</span><p className="text-sm">{viewBooking.notes}</p></div>
               )}
               <BookingDetail bookingId={viewBooking.id} />
             </div>
@@ -515,13 +519,13 @@ export default function AdminBookingsPage() {
       {statusChangeId && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={() => setStatusChangeId(null)}>
           <div className="bg-card border border-border rounded-xl p-6 max-w-sm mx-4" onClick={(e) => e.stopPropagation()}>
-            <h3 className="font-heading font-bold text-lg mb-3">স্ট্যাটাস পরিবর্তন করুন</h3>
+            <h3 className="font-heading font-bold text-lg mb-3">Change Status</h3>
             <select className={inputClass} value={statusChangeVal} onChange={(e) => setStatusChangeVal(e.target.value)}>
               {STATUSES.map((s) => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1).replace("_", " ")}</option>)}
             </select>
             <div className="flex gap-3 justify-end mt-4">
-              <button onClick={() => setStatusChangeId(null)} className="text-sm px-4 py-2 rounded-md bg-secondary">বাতিল</button>
-              <button onClick={handleStatusChange} className="text-sm px-4 py-2 rounded-md bg-gradient-gold text-primary-foreground font-semibold">আপডেট</button>
+              <button onClick={() => setStatusChangeId(null)} className="text-sm px-4 py-2 rounded-md bg-secondary">Cancel</button>
+              <button onClick={handleStatusChange} className="text-sm px-4 py-2 rounded-md bg-gradient-gold text-primary-foreground font-semibold">Update</button>
             </div>
           </div>
         </div>
