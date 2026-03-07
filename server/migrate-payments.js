@@ -89,14 +89,25 @@ async function migrate() {
       {id:'2cc6a51a-d9e8-4ec0-8381-d38c641322a3',amount:50000,booking_id:'6a8b863e-f3a2-4a00-b1fe-ba024241dfe9',customer_id:'81b6e43b-4c5b-4494-aa9f-9198ad2c9bd5',user_id:'81b6e43b-4c5b-4494-aa9f-9198ad2c9bd5',installment_number:1,due_date:null,paid_at:null,payment_method:'cash',status:'completed',notes:null},
     ];
 
+    // Get existing booking IDs to skip orphaned payments
+    const { rows: existingBookings } = await client.query('SELECT id FROM bookings');
+    const bookingIds = new Set(existingBookings.map(r => r.id));
+    
+    let insertedPayments = 0;
+    let skippedPayments = 0;
     for (const p of payments) {
+      if (!bookingIds.has(p.booking_id)) {
+        skippedPayments++;
+        continue;
+      }
       await client.query(
         `INSERT INTO payments (id, amount, booking_id, customer_id, user_id, installment_number, due_date, paid_at, payment_method, status, notes)
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) ON CONFLICT (id) DO NOTHING`,
         [p.id, p.amount, p.booking_id, p.customer_id, p.user_id, p.installment_number, p.due_date, p.paid_at, p.payment_method, p.status, p.notes]
       );
+      insertedPayments++;
     }
-    console.log(`  Inserted ${payments.length} payment records`);
+    console.log(`  Inserted ${insertedPayments} payments (skipped ${skippedPayments} with missing bookings)`);
 
     // =============================================
     // 2. TRANSACTIONS (master ledger)
@@ -174,14 +185,22 @@ async function migrate() {
       {id:'3e4f5a6b-7c8d-9e0f-1a2b-c3d4e5f6a7b8',type:'income',category:'payment',amount:100000,debit:100000,credit:0,booking_id:'9013a0b5-86e9-4f50-9846-277f4afb624e',customer_id:'269c1e11-3461-4b01-99f5-fe22cd0278d6',user_id:'269c1e11-3461-4b01-99f5-fe22cd0278d6',source_type:'customer',source_id:'269c1e11-3461-4b01-99f5-fe22cd0278d6',date:'2026-03-07',note:'Payment #3 for booking',payment_method:'cash',reference:'08e936db-d6b7-4c09-869a-09919728a925'},
     ];
 
+    let insertedTx = 0;
+    let skippedTx = 0;
     for (const t of transactions) {
+      // Skip transactions with booking_id that doesn't exist locally
+      if (t.booking_id && !bookingIds.has(t.booking_id)) {
+        skippedTx++;
+        continue;
+      }
       await client.query(
         `INSERT INTO transactions (id, type, category, amount, debit, credit, booking_id, customer_id, user_id, source_type, source_id, date, note, payment_method, reference)
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15) ON CONFLICT (id) DO NOTHING`,
         [t.id, t.type, t.category, t.amount, t.debit, t.credit, t.booking_id, t.customer_id, t.user_id, t.source_type, t.source_id, t.date, t.note, t.payment_method, t.reference]
       );
+      insertedTx++;
     }
-    console.log(`  Inserted ${transactions.length} transaction records`);
+    console.log(`  Inserted ${insertedTx} transactions (skipped ${skippedTx} with missing bookings)`);
 
     // =============================================
     // 3. Update booking paid_amount and due_amount
