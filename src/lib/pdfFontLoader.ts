@@ -63,30 +63,14 @@ async function ensureBengaliFontForCanvas(): Promise<void> {
   if (fontLoaded) return;
   
   try {
-    // Check if FontFace API is available
     if ("FontFace" in window) {
-      const fontUrl = new URL("@/assets/fonts/NotoSansBengali-Regular.ttf", import.meta.url).href;
-      const font = new FontFace("Noto Sans Bengali", `url(${fontUrl})`);
+      const font = new FontFace("Noto Sans Bengali", `url(/assets/fonts/NotoSansBengali-Regular.ttf)`);
       await font.load();
       document.fonts.add(font);
       fontLoaded = true;
     }
   } catch (e) {
     console.warn("Could not preload Bengali font for canvas:", e);
-    // Try CSS fallback
-    if (!document.getElementById("bengali-font-style")) {
-      const style = document.createElement("style");
-      style.id = "bengali-font-style";
-      style.textContent = `
-        @font-face {
-          font-family: 'Noto Sans Bengali';
-          src: url('/assets/fonts/NotoSansBengali-Regular.ttf') format('truetype');
-          font-weight: normal;
-          font-style: normal;
-        }
-      `;
-      document.head.appendChild(style);
-    }
     fontLoaded = true;
   }
 }
