@@ -64,7 +64,7 @@ export default function SupplierItemsManager({ supplierId, items, isViewer, onRe
     };
 
     if (editId) {
-      const { error } = await (supabase.from("supplier_agent_items" as any) as any).update(payload).eq("id", editId);
+      const { error } = await supabase.from("supplier_agent_items").update(payload).eq("id", editId);
       if (error) { toast({ title: "আপডেট ব্যর্থ", description: error.message, variant: "destructive" }); setSaving(false); return; }
       toast({ title: "আইটেম আপডেট হয়েছে" });
     } else {
