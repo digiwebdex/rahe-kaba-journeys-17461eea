@@ -127,21 +127,24 @@ export default function DailyCashbook() {
     fetchData();
   };
 
+  // Normalize date to YYYY-MM-DD (handles ISO timestamps from API)
+  const normalizeDate = (d: string) => d ? d.substring(0, 10) : "";
+
   // Filter by selected date and type
   const filtered = useMemo(() => {
     return entries.filter((e: any) => {
-      if (e.date !== selectedDate) return false;
+      if (normalizeDate(e.date) !== selectedDate) return false;
       if (viewType !== "all" && e.type !== viewType) return false;
       return true;
     });
   }, [entries, selectedDate, viewType]);
 
   const dailyIncome = useMemo(() =>
-    entries.filter((e: any) => e.date === selectedDate && e.type === "income").reduce((s: number, e: any) => s + Number(e.amount), 0),
+    entries.filter((e: any) => normalizeDate(e.date) === selectedDate && e.type === "income").reduce((s: number, e: any) => s + Number(e.amount), 0),
     [entries, selectedDate]);
 
   const dailyExpense = useMemo(() =>
-    entries.filter((e: any) => e.date === selectedDate && e.type === "expense").reduce((s: number, e: any) => s + Number(e.amount), 0),
+    entries.filter((e: any) => normalizeDate(e.date) === selectedDate && e.type === "expense").reduce((s: number, e: any) => s + Number(e.amount), 0),
     [entries, selectedDate]);
 
   const dailyBalance = dailyIncome - dailyExpense;
@@ -159,10 +162,11 @@ export default function DailyCashbook() {
   const dateGroups = useMemo(() => {
     const groups: Record<string, { income: number; expense: number; count: number }> = {};
     entries.forEach((e: any) => {
-      if (!groups[e.date]) groups[e.date] = { income: 0, expense: 0, count: 0 };
-      groups[e.date].count++;
-      if (e.type === "income") groups[e.date].income += Number(e.amount);
-      else groups[e.date].expense += Number(e.amount);
+      const d = normalizeDate(e.date);
+      if (!groups[d]) groups[d] = { income: 0, expense: 0, count: 0 };
+      groups[d].count++;
+      if (e.type === "income") groups[d].income += Number(e.amount);
+      else groups[d].expense += Number(e.amount);
     });
     return Object.entries(groups).sort(([a], [b]) => b.localeCompare(a)).slice(0, 7);
   }, [entries]);
