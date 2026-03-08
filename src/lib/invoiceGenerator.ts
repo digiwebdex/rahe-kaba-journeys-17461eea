@@ -213,7 +213,7 @@ function addInvoiceTitleBlock(
 
 async function addCustomerSection(
   doc: jsPDF, y: number, customer: InvoiceCustomer, moallemName?: string | null, totalMembers?: number
-): number {
+): Promise<number> {
   const pageWidth = doc.internal.pageSize.getWidth();
 
   // Section header
