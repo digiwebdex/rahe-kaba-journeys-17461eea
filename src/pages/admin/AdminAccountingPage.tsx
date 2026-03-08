@@ -44,6 +44,7 @@ const EMPTY_FORM = {
 };
 
 const TABS = [
+  { key: "cashbook", label: "দৈনিক ক্যাশবুক" },
   { key: "expenses", label: "Expenses" },
   { key: "booking", label: "Booking Profit" },
   { key: "package", label: "Package Profit" },
