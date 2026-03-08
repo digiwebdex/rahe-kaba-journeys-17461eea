@@ -279,14 +279,103 @@ app.get('/api/track/:trackingId', async (req, res) => {
   }
 });
 
+// File + Storage helpers
+const sanitizeStoragePath = (input = '') =>
+  String(input)
+    .replace(/\\/g, '/')
+    .split('/')
+    .filter((p) => p && p !== '.' && p !== '..')
+    .join('/');
+
+const uploadsRoot = path.join(__dirname, 'uploads');
+
 // File upload
-app.post('/api/upload', authenticate, upload.single('file'), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-  res.json({
-    file_path: `/uploads/${req.file.filename}`,
-    file_name: req.file.originalname,
-    file_size: req.file.size,
-  });
+app.post('/api/upload', authenticate, upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+
+    const bucket = sanitizeStoragePath(req.body?.bucket || 'misc');
+    const requestedPath = sanitizeStoragePath(req.body?.path || req.file.originalname);
+    const finalRelative = path.join(bucket, requestedPath).replace(/\\/g, '/');
+    const finalAbsolute = path.join(uploadsRoot, finalRelative);
+
+    await fsp.mkdir(path.dirname(finalAbsolute), { recursive: true });
+    await fsp.rename(req.file.path, finalAbsolute);
+
+    res.json({
+      file_path: `/uploads/${finalRelative}`,
+      file_name: req.file.originalname,
+      file_size: req.file.size,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Storage list
+app.get('/api/storage/:bucket/list', authenticate, async (req, res) => {
+  try {
+    const bucket = sanitizeStoragePath(req.params.bucket);
+    const prefix = sanitizeStoragePath(req.query.prefix || '');
+    const dirPath = path.join(uploadsRoot, bucket, prefix);
+    await fsp.mkdir(dirPath, { recursive: true });
+    const entries = await fsp.readdir(dirPath, { withFileTypes: true });
+
+    const files = await Promise.all(
+      entries
+        .filter((e) => e.isFile())
+        .map(async (e) => {
+          const full = path.join(dirPath, e.name);
+          const stat = await fsp.stat(full);
+          return {
+            name: e.name,
+            id: `${bucket}/${prefix}/${e.name}`.replace(/\/+/g, '/'),
+            created_at: stat.birthtime.toISOString(),
+            updated_at: stat.mtime.toISOString(),
+            metadata: { size: stat.size },
+          };
+        })
+    );
+
+    res.json(files.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Storage download
+app.get('/api/storage/:bucket/download', authenticate, async (req, res) => {
+  try {
+    const bucket = sanitizeStoragePath(req.params.bucket);
+    const filePath = sanitizeStoragePath(req.query.path || '');
+    if (!filePath) return res.status(400).json({ error: 'File path required' });
+
+    const absolutePath = path.join(uploadsRoot, bucket, filePath);
+    if (!fs.existsSync(absolutePath)) return res.status(404).json({ error: 'File not found' });
+
+    res.download(absolutePath, path.basename(filePath));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Storage delete
+app.delete('/api/storage/:bucket', authenticate, async (req, res) => {
+  try {
+    const bucket = sanitizeStoragePath(req.params.bucket);
+    const paths = Array.isArray(req.body?.paths) ? req.body.paths : [];
+
+    for (const p of paths) {
+      const safe = sanitizeStoragePath(p);
+      if (!safe) continue;
+      const absolutePath = path.join(uploadsRoot, bucket, safe);
+      if (fs.existsSync(absolutePath)) await fsp.unlink(absolutePath);
+    }
+
+    res.json({ message: 'Deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // =============================================
