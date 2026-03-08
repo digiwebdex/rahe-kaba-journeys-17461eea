@@ -162,10 +162,11 @@ export default function DailyCashbook() {
   const dateGroups = useMemo(() => {
     const groups: Record<string, { income: number; expense: number; count: number }> = {};
     entries.forEach((e: any) => {
-      if (!groups[e.date]) groups[e.date] = { income: 0, expense: 0, count: 0 };
-      groups[e.date].count++;
-      if (e.type === "income") groups[e.date].income += Number(e.amount);
-      else groups[e.date].expense += Number(e.amount);
+      const d = normalizeDate(e.date);
+      if (!groups[d]) groups[d] = { income: 0, expense: 0, count: 0 };
+      groups[d].count++;
+      if (e.type === "income") groups[d].income += Number(e.amount);
+      else groups[d].expense += Number(e.amount);
     });
     return Object.entries(groups).sort(([a], [b]) => b.localeCompare(a)).slice(0, 7);
   }, [entries]);
