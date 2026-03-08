@@ -271,6 +271,7 @@ export async function exportHajjiPDF({ title, customers }: HajjiReportData) {
     loadLogoBase64(), generateCompanyQr(), getSignatureData(),
   ]);
   const doc = new jsPDF({ orientation: "landscape" });
+  await registerBengaliFont(doc);
   const pageWidth = doc.internal.pageSize.getWidth();
 
   let y = addCompanyHeader(doc, logoBase64, qrDataUrl);
