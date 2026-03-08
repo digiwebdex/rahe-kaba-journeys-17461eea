@@ -385,5 +385,5 @@ export function exportExcel({ title, columns, rows, summary }: ReportData) {
   const ws = XLSX.utils.aoa_to_sheet(wsData);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, title.slice(0, 31));
-  XLSX.writeFile(wb, `${title.replace(/\s+/g, "_")}.xlsx`);
+  XLSX.writeFile(wb, buildSafeFileName(title, "xlsx"));
 }
