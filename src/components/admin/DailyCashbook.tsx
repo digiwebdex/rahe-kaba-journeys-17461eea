@@ -120,7 +120,8 @@ export default function DailyCashbook({ onEntriesChanged }: DailyCashbookProps =
     if (error) { toast.error(error.message); return; }
     toast.success("আপডেট হয়েছে");
     setEditingId(null);
-    fetchData();
+    await fetchData();
+    await onEntriesChanged?.();
   };
 
   const confirmDelete = async () => {
