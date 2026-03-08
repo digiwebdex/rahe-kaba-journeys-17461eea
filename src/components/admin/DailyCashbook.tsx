@@ -171,33 +171,53 @@ export default function DailyCashbook() {
     return Object.entries(groups).sort(([a], [b]) => b.localeCompare(a)).slice(0, 7);
   }, [entries]);
 
-  const handleExportPDF = () => {
-    exportPDF({
-      title: `দৈনিক ক্যাশবুক — ${selectedDate}`,
-      columns: ["ধরন", "নাম/বিবরণ", "ক্যাটাগরি", "পরিমাণ", "পদ্ধতি"],
-      rows: filtered.map(e => [
-        e.type === "income" ? "জমা" : "খরচ",
-        e.description,
-        getCategoryLabel(e.type, e.category),
-        Number(e.amount),
-        PAYMENT_METHODS.find(p => p.value === e.payment_method)?.label || e.payment_method,
-      ]),
-      summary: [`মোট জমা: ৳${dailyIncome.toLocaleString()} | মোট খরচ: ৳${dailyExpense.toLocaleString()} | ব্যালেন্স: ৳${dailyBalance.toLocaleString()}`],
-    });
+  const handleExportPDF = async () => {
+    try {
+      if (!filtered.length) {
+        toast.error("এই তারিখে এক্সপোর্ট করার মতো ডেটা নেই");
+        return;
+      }
+
+      await exportPDF({
+        title: `Daily Cashbook ${selectedDate}`,
+        columns: ["Type", "Description", "Category", "Amount", "Method"],
+        rows: filtered.map(e => [
+          e.type === "income" ? "Income" : "Expense",
+          e.description,
+          getCategoryLabel(e.type, e.category),
+          Number(e.amount),
+          PAYMENT_METHODS.find(p => p.value === e.payment_method)?.label || e.payment_method,
+        ]),
+        summary: [`Total Income: BDT ${dailyIncome.toLocaleString("en-IN")} | Total Expense: BDT ${dailyExpense.toLocaleString("en-IN")} | Balance: BDT ${dailyBalance.toLocaleString("en-IN")}`],
+      });
+    } catch (error) {
+      console.error("Daily cashbook PDF export failed:", error);
+      toast.error("PDF export failed");
+    }
   };
 
   const handleExportExcel = () => {
-    exportExcel({
-      title: `দৈনিক ক্যাশবুক — ${selectedDate}`,
-      columns: ["ধরন", "নাম/বিবরণ", "ক্যাটাগরি", "পরিমাণ", "পদ্ধতি"],
-      rows: filtered.map(e => [
-        e.type === "income" ? "জমা" : "খরচ",
-        e.description,
-        getCategoryLabel(e.type, e.category),
-        Number(e.amount),
-        PAYMENT_METHODS.find(p => p.value === e.payment_method)?.label || e.payment_method,
-      ]),
-    });
+    try {
+      if (!filtered.length) {
+        toast.error("এই তারিখে এক্সপোর্ট করার মতো ডেটা নেই");
+        return;
+      }
+
+      exportExcel({
+        title: `Daily Cashbook ${selectedDate}`,
+        columns: ["Type", "Description", "Category", "Amount", "Method"],
+        rows: filtered.map(e => [
+          e.type === "income" ? "Income" : "Expense",
+          e.description,
+          getCategoryLabel(e.type, e.category),
+          Number(e.amount),
+          PAYMENT_METHODS.find(p => p.value === e.payment_method)?.label || e.payment_method,
+        ]),
+      });
+    } catch (error) {
+      console.error("Daily cashbook Excel export failed:", error);
+      toast.error("Excel export failed");
+    }
   };
 
   return (
