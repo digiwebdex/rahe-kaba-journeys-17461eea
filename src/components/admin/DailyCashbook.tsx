@@ -140,11 +140,11 @@ export default function DailyCashbook() {
   }, [entries, selectedDate, viewType]);
 
   const dailyIncome = useMemo(() =>
-    entries.filter((e: any) => e.date === selectedDate && e.type === "income").reduce((s: number, e: any) => s + Number(e.amount), 0),
+    entries.filter((e: any) => normalizeDate(e.date) === selectedDate && e.type === "income").reduce((s: number, e: any) => s + Number(e.amount), 0),
     [entries, selectedDate]);
 
   const dailyExpense = useMemo(() =>
-    entries.filter((e: any) => e.date === selectedDate && e.type === "expense").reduce((s: number, e: any) => s + Number(e.amount), 0),
+    entries.filter((e: any) => normalizeDate(e.date) === selectedDate && e.type === "expense").reduce((s: number, e: any) => s + Number(e.amount), 0),
     [entries, selectedDate]);
 
   const dailyBalance = dailyIncome - dailyExpense;
