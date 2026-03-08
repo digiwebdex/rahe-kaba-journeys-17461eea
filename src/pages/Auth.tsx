@@ -327,7 +327,7 @@ const Auth = () => {
               <button onClick={() => setMode("login")} className="text-primary hover:underline font-medium">{t("auth.signIn")}</button>
             </p>
           )}
-          {(mode === "otp" || mode === "forgot") && (
+          {(mode === "forgot") && (
             <p>
               <button onClick={() => setMode("login")} className="text-primary hover:underline font-medium">{t("auth.backToSignIn")}</button>
             </p>
