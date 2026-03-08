@@ -127,10 +127,13 @@ export default function DailyCashbook() {
     fetchData();
   };
 
+  // Normalize date to YYYY-MM-DD (handles ISO timestamps from API)
+  const normalizeDate = (d: string) => d ? d.substring(0, 10) : "";
+
   // Filter by selected date and type
   const filtered = useMemo(() => {
     return entries.filter((e: any) => {
-      if (e.date !== selectedDate) return false;
+      if (normalizeDate(e.date) !== selectedDate) return false;
       if (viewType !== "all" && e.type !== viewType) return false;
       return true;
     });
