@@ -42,7 +42,8 @@ export default function AdminSupplierAgentsPage() {
   const [agents, setAgents] = useState<SupplierAgent[]>([]);
   const [payments, setPayments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
+  const [allItems, setAllItems] = useState<any[]>([]);
+  const [allPaymentsDetailed, setAllPaymentsDetailed] = useState<any[]>([]);
   const [form, setForm] = useState(emptyForm);
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
