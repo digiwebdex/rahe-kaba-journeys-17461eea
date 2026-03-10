@@ -425,6 +425,44 @@ export default function AdminSupplierAgentProfilePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Payment Modal */}
+      <Dialog open={showEditPaymentModal} onOpenChange={(o) => { if (!o) { setShowEditPaymentModal(false); setEditPaymentId(null); } }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>সাপ্লায়ার পেমেন্ট সম্পাদনা</DialogTitle><DialogDescription>পেমেন্ট তথ্য পরিবর্তন করুন</DialogDescription></DialogHeader>
+          <div className="space-y-3">
+            <div><label className="text-xs text-muted-foreground block mb-1">পরিমাণ (৳) *</label>
+              <Input type="number" min={0} value={editPaymentForm.amount} onChange={(e) => setEditPaymentForm({ ...editPaymentForm, amount: e.target.value })} /></div>
+            <div><label className="text-xs text-muted-foreground block mb-1">পদ্ধতি</label>
+              <Select value={editPaymentForm.payment_method} onValueChange={(v) => setEditPaymentForm({ ...editPaymentForm, payment_method: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{PAYMENT_METHODS.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
+              </Select></div>
+            <div><label className="text-xs text-muted-foreground block mb-1">তারিখ</label>
+              <Input type="date" value={editPaymentForm.date} onChange={(e) => setEditPaymentForm({ ...editPaymentForm, date: e.target.value })} /></div>
+            <div><label className="text-xs text-muted-foreground block mb-1">নোট</label>
+              <Input value={editPaymentForm.notes} onChange={(e) => setEditPaymentForm({ ...editPaymentForm, notes: e.target.value })} /></div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setShowEditPaymentModal(false); setEditPaymentId(null); }}>বাতিল</Button>
+            <Button onClick={handleSavePaymentEdit}>আপডেট করুন</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Payment Confirmation */}
+      {deletePaymentId && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={() => setDeletePaymentId(null)}>
+          <div className="bg-card border border-border rounded-xl p-6 max-w-sm mx-4" onClick={(e) => e.stopPropagation()}>
+            <h3 className="font-heading font-bold text-lg mb-2">পেমেন্ট মুছবেন?</h3>
+            <p className="text-sm text-muted-foreground mb-4">এই কাজটি পূর্বাবস্থায় ফেরানো যাবে না।</p>
+            <div className="flex gap-3 justify-end">
+              <Button variant="outline" onClick={() => setDeletePaymentId(null)}>বাতিল</Button>
+              <Button variant="destructive" onClick={confirmDeletePayment}>মুছুন</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
