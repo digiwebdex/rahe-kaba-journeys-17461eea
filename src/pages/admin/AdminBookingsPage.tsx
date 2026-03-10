@@ -399,7 +399,6 @@ export default function AdminBookingsPage() {
           <span className="text-xs text-muted-foreground ml-auto">{filtered.length} bookings</span>
         </div>
       </div>
-      </div>
 
       {filtered.map((b: any) => (
         <div key={b.id} className="bg-card border border-border rounded-lg p-4 cursor-pointer hover:border-primary/30 transition-colors" onClick={() => { if (editingId !== b.id) setViewBooking(b); }}>
