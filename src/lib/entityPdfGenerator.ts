@@ -199,7 +199,7 @@ export async function generateMoallemPdf(data: MoallemPdfData, company: CompanyI
       startY: y,
       head: [["Tracking ID", "Guest", "Package", "Total", "Paid", "Due", "Status"]],
       body: data.bookings.map(b => [b.tracking_id, b.guest_name, b.package_name, fmt(b.total), fmt(b.paid), fmt(b.due), b.status]),
-      styles: { fontSize: 7, font: "NotoSansBengali" },
+      styles: { fontSize: 7, font: "helvetica" },
       headStyles: { fillColor: [40, 46, 56] },
       margin: { left: 14, right: 14 },
     });
@@ -216,7 +216,7 @@ export async function generateMoallemPdf(data: MoallemPdfData, company: CompanyI
       startY: y,
       head: [["Amount", "Date", "Method", "Notes"]],
       body: data.moallemPayments.map(p => [fmt(p.amount), fmtDate(p.date), p.method, p.notes || "—"]),
-      styles: { fontSize: 7, font: "NotoSansBengali" },
+      styles: { fontSize: 7, font: "helvetica" },
       headStyles: { fillColor: [60, 70, 85] },
       margin: { left: 14, right: 14 },
     });
@@ -233,7 +233,7 @@ export async function generateMoallemPdf(data: MoallemPdfData, company: CompanyI
       startY: y,
       head: [["Amount", "Date", "Method", "Notes"]],
       body: data.commissionPayments.map(p => [fmt(p.amount), fmtDate(p.date), p.method, p.notes || "—"]),
-      styles: { fontSize: 7, font: "NotoSansBengali" },
+      styles: { fontSize: 7, font: "helvetica" },
       headStyles: { fillColor: [60, 70, 85] },
       margin: { left: 14, right: 14 },
     });
@@ -253,7 +253,7 @@ export interface SupplierPdfData {
   notes?: string | null;
   items?: { description: string; quantity: number; unit_price: number; total_amount: number }[];
   bookings: { tracking_id: string; guest_name: string; package_name: string; total: number; cost: number; paid_to_supplier: number; supplier_due: number; status: string }[];
-  agentPayments: { amount: number; date: string; method: string; notes?: string | null }[];
+  agentPayments: { amount: number; date: string; method: string; notes?: string | null; category?: string }[];
   contracts?: { contract_amount: number; pilgrim_count: number; total_paid: number; total_due: number; created_at: string }[];
   contractPayments?: { amount: number; payment_date: string; payment_method: string; note?: string | null }[];
   summary: { totalBookings: number; totalTravelers: number; contractedHajji: number; totalPaid: number; totalDue: number; totalBilled: number };
@@ -313,7 +313,7 @@ export async function generateSupplierPdf(data: SupplierPdfData, company: Compan
         ...data.items.map((item, i) => [String(i + 1), item.description, String(item.quantity), fmt(item.unit_price), fmt(item.total_amount)]),
         ["", "", "", "Grand Total", fmt(itemsTotal)],
       ],
-      styles: { fontSize: 7, font: "NotoSansBengali" },
+      styles: { fontSize: 7, font: "helvetica" },
       headStyles: { fillColor: [40, 46, 56] },
       margin: { left: 14, right: 14 },
       didParseCell: (hookData: any) => {
@@ -335,7 +335,7 @@ export async function generateSupplierPdf(data: SupplierPdfData, company: Compan
       startY: y,
       head: [["Tracking ID", "Guest", "Package", "Total", "Cost", "Paid", "Due", "Status"]],
       body: data.bookings.map(b => [b.tracking_id, b.guest_name, b.package_name, fmt(b.total), fmt(b.cost), fmt(b.paid_to_supplier), fmt(b.supplier_due), b.status]),
-      styles: { fontSize: 7, font: "NotoSansBengali" },
+      styles: { fontSize: 7, font: "helvetica" },
       headStyles: { fillColor: [40, 46, 56] },
       margin: { left: 14, right: 14 },
     });
@@ -350,9 +350,9 @@ export async function generateSupplierPdf(data: SupplierPdfData, company: Compan
     y += 4;
     autoTable(doc, {
       startY: y,
-      head: [["Amount", "Date", "Method", "Notes"]],
-      body: data.agentPayments.map(p => [fmt(p.amount), fmtDate(p.date), p.method, p.notes || "—"]),
-      styles: { fontSize: 7, font: "NotoSansBengali" },
+      head: [["Category", "Amount", "Date", "Method", "Notes"]],
+      body: data.agentPayments.map(p => [p.category || "—", fmt(p.amount), fmtDate(p.date), p.method, p.notes || "—"]),
+      styles: { fontSize: 7, font: "helvetica" },
       headStyles: { fillColor: [60, 70, 85] },
       margin: { left: 14, right: 14 },
     });
@@ -370,7 +370,7 @@ export async function generateSupplierPdf(data: SupplierPdfData, company: Compan
       startY: y,
       head: [["Date", "Pilgrim Count", "Contract Amount", "Paid", "Due"]],
       body: data.contracts.map(c => [fmtDate(c.created_at), String(c.pilgrim_count), fmt(c.contract_amount), fmt(c.total_paid), fmt(c.total_due)]),
-      styles: { fontSize: 7, font: "NotoSansBengali" },
+      styles: { fontSize: 7, font: "helvetica" },
       headStyles: { fillColor: [40, 46, 56] },
       margin: { left: 14, right: 14 },
     });
@@ -388,7 +388,7 @@ export async function generateSupplierPdf(data: SupplierPdfData, company: Compan
       startY: y,
       head: [["Amount", "Date", "Method", "Note"]],
       body: data.contractPayments.map(p => [fmt(p.amount), fmtDate(p.payment_date), p.payment_method || "cash", p.note || "—"]),
-      styles: { fontSize: 7, font: "NotoSansBengali" },
+      styles: { fontSize: 7, font: "helvetica" },
       headStyles: { fillColor: [60, 70, 85] },
       margin: { left: 14, right: 14 },
     });
@@ -463,7 +463,7 @@ export async function generateCustomerPdf(data: CustomerPdfData, company: Compan
       startY: y,
       head: [["Tracking ID", "Package", "Date", "Total", "Paid", "Due", "Status"]],
       body: data.bookings.map(b => [b.tracking_id, b.package_name, fmtDate(b.date), fmt(b.total), fmt(b.paid), fmt(b.due), b.status]),
-      styles: { fontSize: 7, font: "NotoSansBengali" },
+      styles: { fontSize: 7, font: "helvetica" },
       headStyles: { fillColor: [40, 46, 56] },
       margin: { left: 14, right: 14 },
     });
@@ -480,7 +480,7 @@ export async function generateCustomerPdf(data: CustomerPdfData, company: Compan
       startY: y,
       head: [["#", "Booking", "Amount", "Date", "Method", "Status"]],
       body: data.payments.map(p => [p.installment || "—", p.tracking_id, fmt(p.amount), fmtDate(p.date), p.method || "—", p.status]),
-      styles: { fontSize: 7, font: "NotoSansBengali" },
+      styles: { fontSize: 7, font: "helvetica" },
       headStyles: { fillColor: [60, 70, 85] },
       margin: { left: 14, right: 14 },
     });

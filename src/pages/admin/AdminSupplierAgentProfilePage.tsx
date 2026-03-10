@@ -164,7 +164,12 @@ export default function AdminSupplierAgentProfilePage() {
         paid_to_supplier: Number(b.paid_to_supplier || 0),
         supplier_due: Number(b.supplier_due || 0), status: b.status,
       })),
-      agentPayments: filteredPayments.map(p => ({ amount: Number(p.amount), date: p.date, method: p.payment_method || "cash", notes: p.notes })),
+      agentPayments: filteredPayments.map(p => {
+        const serviceMatch = SERVICE_TYPES.find(s => s.value && p.notes?.startsWith(s.label));
+        const category = serviceMatch?.label || "";
+        const cleanNotes = serviceMatch ? (p.notes?.replace(serviceMatch.label, "").replace(/^\s*—\s*/, "").trim() || "") : (p.notes || "");
+        return { amount: Number(p.amount), date: p.date, method: p.payment_method || "cash", notes: cleanNotes, category };
+      }),
       contracts: contracts.map((c: any) => ({
         contract_amount: Number(c.contract_amount || 0),
         pilgrim_count: Number(c.pilgrim_count || 0),
@@ -272,18 +277,24 @@ export default function AdminSupplierAgentProfilePage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead><tr className="border-b border-border text-left text-muted-foreground text-xs">
-                  <th className="pb-2 pr-3">তারিখ</th><th className="pb-2 pr-3">পরিমাণ</th><th className="pb-2 pr-3">পদ্ধতি</th><th className="pb-2 pr-3">বুকিং</th><th className="pb-2">নোট</th>
+                  <th className="pb-2 pr-3">তারিখ</th><th className="pb-2 pr-3">সার্ভিস</th><th className="pb-2 pr-3">পরিমাণ</th><th className="pb-2 pr-3">পদ্ধতি</th><th className="pb-2 pr-3">বুকিং</th><th className="pb-2">নোট</th>
                 </tr></thead>
                 <tbody>
-                  {filteredPayments.map((p: any) => (
-                    <tr key={p.id} className="border-b border-border/30">
-                      <td className="py-2 pr-3 text-xs">{format(new Date(p.date), "dd MMM yyyy")}</td>
-                      <td className="py-2 pr-3 font-bold text-emerald-500">{fmt(p.amount)}</td>
-                      <td className="py-2 pr-3 capitalize">{p.payment_method}</td>
-                      <td className="py-2 pr-3 text-xs font-mono text-primary">{p.booking_id ? bookings.find(b => b.id === p.booking_id)?.tracking_id || "—" : "General"}</td>
-                      <td className="py-2 text-xs text-muted-foreground">{p.notes || "—"}</td>
-                    </tr>
-                  ))}
+                  {filteredPayments.map((p: any) => {
+                    const serviceMatch = SERVICE_TYPES.find(s => s.value && p.notes?.startsWith(s.label));
+                    const category = serviceMatch?.label || "—";
+                    const cleanNotes = serviceMatch ? (p.notes?.replace(serviceMatch.label, "").replace(/^\s*—\s*/, "").trim() || "—") : (p.notes || "—");
+                    return (
+                      <tr key={p.id} className="border-b border-border/30">
+                        <td className="py-2 pr-3 text-xs">{format(new Date(p.date), "dd MMM yyyy")}</td>
+                        <td className="py-2 pr-3"><Badge variant="outline" className="text-[10px]">{category}</Badge></td>
+                        <td className="py-2 pr-3 font-bold text-emerald-500">{fmt(p.amount)}</td>
+                        <td className="py-2 pr-3 capitalize">{p.payment_method}</td>
+                        <td className="py-2 pr-3 text-xs font-mono text-primary">{p.booking_id ? bookings.find(b => b.id === p.booking_id)?.tracking_id || "—" : "General"}</td>
+                        <td className="py-2 text-xs text-muted-foreground">{cleanNotes}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
