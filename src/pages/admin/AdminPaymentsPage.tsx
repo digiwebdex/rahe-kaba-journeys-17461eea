@@ -826,6 +826,14 @@ export default function AdminPaymentsPage() {
               </div>
             )}
 
+            {/* Service Type Selection */}
+            <div>
+              <label className="text-xs text-muted-foreground block mb-1">সার্ভিস ধরন (ঐচ্ছিক)</label>
+              <select className={inputClass} value={addForm.service_type} onChange={(e) => setAddForm({ ...addForm, service_type: e.target.value })}>
+                {SERVICE_TYPES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+              </select>
+            </div>
+
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-xs text-muted-foreground block mb-1">পরিমাণ (৳) *</label>
