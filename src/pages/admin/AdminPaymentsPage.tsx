@@ -1016,11 +1016,11 @@ export default function AdminPaymentsPage() {
               )}
               {viewPayment._type === "moallem" && viewPayment.bookings && (
                 <div className="border-t border-border/50 pt-3">
-                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">বুকিং তথ্য</h4>
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Booking Info</h4>
                   <div className="grid grid-cols-3 gap-3 bg-secondary/50 rounded-lg p-3">
-                    <div><span className="text-muted-foreground text-xs block">মোট</span><span className="font-bold">{fmt(Number(viewPayment.bookings.total_amount))}</span></div>
-                    <div><span className="text-muted-foreground text-xs block">মোয়াল্লেম পেইড</span><span className="font-bold text-emerald">{fmt(Number(viewPayment.bookings.paid_by_moallem || 0))}</span></div>
-                    <div><span className="text-muted-foreground text-xs block">মোয়াল্লেম বকেয়া</span><span className="font-bold text-destructive">{fmt(Number(viewPayment.bookings.moallem_due || 0))}</span></div>
+                    <div><span className="text-muted-foreground text-xs block">Total</span><span className="font-bold">{fmt(Number(viewPayment.bookings.total_amount))}</span></div>
+                    <div><span className="text-muted-foreground text-xs block">Moallem Paid</span><span className="font-bold text-emerald">{fmt(Number(viewPayment.bookings.paid_by_moallem || 0))}</span></div>
+                    <div><span className="text-muted-foreground text-xs block">Moallem Due</span><span className="font-bold text-destructive">{fmt(Number(viewPayment.bookings.moallem_due || 0))}</span></div>
                   </div>
                 </div>
               )}
