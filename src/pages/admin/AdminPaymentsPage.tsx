@@ -952,11 +952,11 @@ export default function AdminPaymentsPage() {
               <textarea className={inputClass + " resize-none"} rows={2} value={addForm.notes} onChange={(e) => setAddForm({ ...addForm, notes: e.target.value })} placeholder="Additional info..." maxLength={500} />
             </div>
             <div className="flex justify-end gap-3 pt-2">
-              <button onClick={() => setShowAddModal(false)} className="text-sm px-4 py-2 rounded-md bg-secondary">বাতিল</button>
+              <button onClick={() => setShowAddModal(false)} className="text-sm px-4 py-2 rounded-md bg-secondary">Cancel</button>
               <button onClick={handleAddPayment} disabled={addLoading}
                 className="text-sm px-4 py-2 rounded-md bg-gradient-gold text-primary-foreground font-semibold hover:opacity-90 transition-opacity shadow-gold disabled:opacity-50 flex items-center gap-2">
                 <Save className="h-4 w-4" />
-                {addLoading ? "যোগ হচ্ছে..." : "পেমেন্ট যোগ করুন"}
+                {addLoading ? "Adding..." : "Add Payment"}
               </button>
             </div>
           </div>
