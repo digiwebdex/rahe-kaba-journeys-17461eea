@@ -1006,11 +1006,11 @@ export default function AdminPaymentsPage() {
               </div>
               {viewPayment._type === "customer" && viewPayment.bookings && (
                 <div className="border-t border-border/50 pt-3">
-                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">বুকিং তথ্য</h4>
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Booking Info</h4>
                   <div className="grid grid-cols-3 gap-3 bg-secondary/50 rounded-lg p-3">
-                    <div><span className="text-muted-foreground text-xs block">মোট</span><span className="font-bold">{fmt(Number(viewPayment.bookings.total_amount))}</span></div>
-                    <div><span className="text-muted-foreground text-xs block">পরিশোধিত</span><span className="font-bold text-emerald">{fmt(Number(viewPayment.bookings.paid_amount))}</span></div>
-                    <div><span className="text-muted-foreground text-xs block">বকেয়া</span><span className="font-bold text-destructive">{fmt(Number(viewPayment.bookings.due_amount || 0))}</span></div>
+                    <div><span className="text-muted-foreground text-xs block">Total</span><span className="font-bold">{fmt(Number(viewPayment.bookings.total_amount))}</span></div>
+                    <div><span className="text-muted-foreground text-xs block">Paid</span><span className="font-bold text-emerald">{fmt(Number(viewPayment.bookings.paid_amount))}</span></div>
+                    <div><span className="text-muted-foreground text-xs block">Due</span><span className="font-bold text-destructive">{fmt(Number(viewPayment.bookings.due_amount || 0))}</span></div>
                   </div>
                 </div>
               )}
