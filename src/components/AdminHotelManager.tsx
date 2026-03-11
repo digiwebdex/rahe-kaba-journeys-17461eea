@@ -425,7 +425,7 @@ const AdminHotelManager = ({ hotels, onRefresh }: Props) => {
               )}
               {Array.isArray(viewHotel.amenities) && viewHotel.amenities.length > 0 && (
                 <div>
-                  <span className="text-muted-foreground text-xs block mb-1">সুবিধাসমূহ</span>
+                  <span className="text-muted-foreground text-xs block mb-1">Amenities</span>
                   <div className="flex flex-wrap gap-1">
                     {viewHotel.amenities.map((a: string, i: number) => (
                       <span key={i} className="text-xs bg-secondary px-2 py-0.5 rounded capitalize">{a}</span>
