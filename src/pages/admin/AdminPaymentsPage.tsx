@@ -1080,7 +1080,7 @@ export default function AdminPaymentsPage() {
           </DialogHeader>
           <div className="space-y-3">
             <div>
-              <label className="text-xs text-muted-foreground block mb-1">পরিমাণ (৳) *</label>
+              <label className="text-xs text-muted-foreground block mb-1">Amount (BDT) *</label>
               <input className={inputClass} type="number" min={1} value={editForm.amount || ""} onChange={(e) => setEditForm({ ...editForm, amount: e.target.value })} />
             </div>
             <div>
