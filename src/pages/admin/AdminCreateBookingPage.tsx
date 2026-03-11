@@ -256,8 +256,8 @@ export default function AdminCreateBookingPage() {
                 onChange={(e) => setForm(f => ({ ...f, discount: Math.max(0, parseFloat(e.target.value) || 0) }))} />
             </div>
             <div>
-              <label className="text-xs text-muted-foreground block mb-1">Final Price (৳)</label>
-              <div className={`${inputClass} bg-muted/50 font-bold text-foreground`}>৳{individualFinalPrice.toLocaleString()}</div>
+              <label className="text-xs text-muted-foreground block mb-1">Final Price (BDT)</label>
+              <div className={`${inputClass} bg-muted/50 font-bold text-foreground`}>BDT {individualFinalPrice.toLocaleString()}</div>
             </div>
           </div>
         </div>
