@@ -402,7 +402,7 @@ export default function AdminReportsPage() {
   // ══════════════════════════════════════════════
   const handleExport = (type: "pdf" | "excel") => {
     let data: any;
-    const makeSummary = (paid: number, due: number) => [`Total Paid: ৳${paid.toLocaleString()}`, `Total Due: ৳${due.toLocaleString()}`];
+    const makeSummary = (paid: number, due: number) => [`Total Paid: BDT ${paid.toLocaleString()}`, `Total Due: BDT ${due.toLocaleString()}`];
     switch (activeTab) {
       case "financial": {
         const cols = canSeeProfit ? ["Month","Income","Expenses","Profit","Bookings"] : ["Month","Income","Expenses","Bookings"];
