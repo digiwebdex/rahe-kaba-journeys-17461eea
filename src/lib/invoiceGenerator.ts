@@ -896,6 +896,7 @@ export async function generateCommissionReceipt(
     columnStyles: { 0: { fontStyle: "bold", cellWidth: 55 } },
     margin: { left: 14, right: 14 },
     tableWidth: 130,
+    didDrawCell: bengaliCellHook,
   });
 
   y = ((doc as any).lastAutoTable?.finalY || y + 40) + 8;
