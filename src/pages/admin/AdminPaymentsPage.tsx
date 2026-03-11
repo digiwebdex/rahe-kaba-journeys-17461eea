@@ -35,6 +35,17 @@ const SERVICE_TYPES = [
   { value: "other", label: "অন্যান্য (Other)" },
 ];
 
+// Extract service type from notes (format: "সার্ভিস লেবেল — actual notes")
+const extractServiceType = (notes: string | null): { serviceValue: string; serviceLabel: string; cleanNotes: string } => {
+  if (!notes) return { serviceValue: "", serviceLabel: "", cleanNotes: "" };
+  for (const st of SERVICE_TYPES) {
+    if (!st.value) continue;
+    if (notes.startsWith(st.label + " — ")) return { serviceValue: st.value, serviceLabel: st.label, cleanNotes: notes.substring(st.label.length + 3) };
+    if (notes === st.label) return { serviceValue: st.value, serviceLabel: st.label, cleanNotes: "" };
+  }
+  return { serviceValue: "", serviceLabel: "", cleanNotes: notes };
+};
+
 export default function AdminPaymentsPage() {
   const isViewer = useIsViewer();
   const canModify = useCanModifyFinancials();
@@ -279,9 +290,10 @@ export default function AdminPaymentsPage() {
   };
 
   const startEdit = (p: any) => {
+    const { serviceValue, cleanNotes } = extractServiceType(p.notes);
     setEditingId(p.id);
     setEditType(p._type || "customer");
-    setEditForm({ amount: p.amount, due_date: p.due_date || "", status: p.status || "completed", payment_method: p.payment_method || "manual", notes: p.notes || "", transaction_id: p.transaction_id || "", date: p.date || "" });
+    setEditForm({ amount: p.amount, due_date: p.due_date || "", status: p.status || "completed", payment_method: p.payment_method || "manual", notes: cleanNotes, transaction_id: p.transaction_id || "", date: p.date || "", service_type: serviceValue });
     if (p._type === "moallem" || p._type === "supplier") {
       setShowEditModal(true);
     }
@@ -289,17 +301,21 @@ export default function AdminPaymentsPage() {
 
   const saveEdit = async () => {
     if (!editingId) return;
+    // Rebuild notes with service type
+    const serviceLabel = SERVICE_TYPES.find(s => s.value === editForm.service_type)?.label || "";
+    const combinedNotes = [serviceLabel, (editForm.notes || "").trim()].filter(Boolean).join(" — ") || null;
+
     if (editType === "moallem") {
       const { error } = await supabase.from("moallem_payments").update({
         amount: parseFloat(editForm.amount), payment_method: editForm.payment_method,
-        notes: editForm.notes || null, date: editForm.date || undefined,
+        notes: combinedNotes, date: editForm.date || undefined,
       }).eq("id", editingId);
       if (error) { toast.error(error.message); return; }
       toast.success("Moallem payment updated"); setEditingId(null); setShowEditModal(false); fetchPayments();
     } else if (editType === "supplier") {
       const { error } = await supabase.from("supplier_agent_payments").update({
         amount: parseFloat(editForm.amount), payment_method: editForm.payment_method,
-        notes: editForm.notes || null, date: editForm.date || undefined,
+        notes: combinedNotes, date: editForm.date || undefined,
       }).eq("id", editingId);
       if (error) { toast.error(error.message); return; }
       toast.success("Supplier payment updated"); setEditingId(null); setShowEditModal(false); fetchPayments();
@@ -307,7 +323,7 @@ export default function AdminPaymentsPage() {
       const { error } = await supabase.from("payments").update({
         amount: parseFloat(editForm.amount), due_date: editForm.due_date || null,
         status: editForm.status, payment_method: editForm.payment_method,
-        notes: editForm.notes || null, transaction_id: editForm.transaction_id || null,
+        notes: combinedNotes, transaction_id: editForm.transaction_id || null,
         ...(editForm.status === "completed" && !payments.find(p => p.id === editingId)?.paid_at ? { paid_at: new Date().toISOString() } : {}),
       }).eq("id", editingId);
       if (error) { toast.error(error.message); return; }
@@ -515,20 +531,24 @@ export default function AdminPaymentsPage() {
                         <th className="py-2 px-4">Booking</th>
                         <th className="py-2 px-4">Amount</th>
                         <th className="py-2 px-4">Method</th>
+                        <th className="py-2 px-4">Service Type</th>
                         <th className="py-2 px-4">Date</th>
                         <th className="py-2 px-4">Notes</th>
                         <th className="py-2 px-4">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {group.payments.map((p: any, i: number) => (
+                      {group.payments.map((p: any, i: number) => {
+                        const { serviceLabel, cleanNotes } = extractServiceType(p.notes);
+                        return (
                         <tr key={p.id} className="border-b border-border/30 hover:bg-secondary/20">
                           <td className="py-2.5 px-4 text-xs text-muted-foreground">{i + 1}</td>
                           <td className="py-2.5 px-4 font-mono text-xs">{p.bookings?.tracking_id || "—"}</td>
                           <td className="py-2.5 px-4 font-medium">{fmt(p.amount)}</td>
                           <td className="py-2.5 px-4 capitalize text-xs">{p.payment_method || "—"}</td>
+                          <td className="py-2.5 px-4 text-xs">{serviceLabel || "—"}</td>
                           <td className="py-2.5 px-4 text-xs">{p.date ? new Date(p.date).toLocaleDateString() : "—"}</td>
-                          <td className="py-2.5 px-4 text-xs text-muted-foreground truncate max-w-[150px]">{p.notes || "—"}</td>
+                          <td className="py-2.5 px-4 text-xs text-muted-foreground truncate max-w-[150px]">{cleanNotes || "—"}</td>
                           <td className="py-2.5 px-4" onClick={(e) => e.stopPropagation()}>
                              <AdminActionMenu inlineCount={0} actions={[
                               { label: "Edit", icon: <Edit2 className="h-3.5 w-3.5" />, onClick: () => startEdit({ ...p, _type: "moallem" }), variant: "warning", hidden: !canModify },
@@ -536,7 +556,8 @@ export default function AdminPaymentsPage() {
                              ]} />
                           </td>
                         </tr>
-                      ))}
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -583,20 +604,24 @@ export default function AdminPaymentsPage() {
                         <th className="py-2 px-4">Booking</th>
                         <th className="py-2 px-4">Amount</th>
                         <th className="py-2 px-4">Method</th>
+                        <th className="py-2 px-4">Service Type</th>
                         <th className="py-2 px-4">Date</th>
                         <th className="py-2 px-4">Notes</th>
                         <th className="py-2 px-4">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {group.payments.map((p: any, i: number) => (
+                      {group.payments.map((p: any, i: number) => {
+                        const { serviceLabel: sLabel, cleanNotes: cNotes } = extractServiceType(p.notes);
+                        return (
                         <tr key={p.id} className="border-b border-border/30 hover:bg-secondary/20">
                           <td className="py-2.5 px-4 text-xs text-muted-foreground">{i + 1}</td>
                           <td className="py-2.5 px-4 font-mono text-xs">{p.bookings?.tracking_id || "—"}</td>
                           <td className="py-2.5 px-4 font-medium">{fmt(p.amount)}</td>
                           <td className="py-2.5 px-4 capitalize text-xs">{p.payment_method || "—"}</td>
+                          <td className="py-2.5 px-4 text-xs">{sLabel || "—"}</td>
                           <td className="py-2.5 px-4 text-xs">{p.date ? new Date(p.date).toLocaleDateString() : "—"}</td>
-                          <td className="py-2.5 px-4 text-xs text-muted-foreground truncate max-w-[150px]">{p.notes || "—"}</td>
+                          <td className="py-2.5 px-4 text-xs text-muted-foreground truncate max-w-[150px]">{cNotes || "—"}</td>
                           <td className="py-2.5 px-4" onClick={(e) => e.stopPropagation()}>
                              <AdminActionMenu inlineCount={0} actions={[
                               { label: "Edit", icon: <Edit2 className="h-3.5 w-3.5" />, onClick: () => startEdit({ ...p, _type: "supplier" }), variant: "warning", hidden: !canModify },
@@ -604,7 +629,8 @@ export default function AdminPaymentsPage() {
                              ]} />
                           </td>
                         </tr>
-                      ))}
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -625,6 +651,7 @@ export default function AdminPaymentsPage() {
               <th className="pb-3 pr-4">Name</th>
               <th className="pb-3 pr-4">Amount</th>
               <th className="pb-3 pr-4">Method</th>
+              <th className="pb-3 pr-4">Service Type</th>
               <th className="pb-3 pr-4">Date</th>
               <th className="pb-3 pr-4">Status</th>
               <th className="pb-3">Actions</th>
@@ -633,6 +660,7 @@ export default function AdminPaymentsPage() {
           <tbody>
             {allCombined.map((p: any) => {
               const badge = getTypeBadge(p._type);
+              const { serviceLabel: pServiceLabel, cleanNotes: pCleanNotes } = extractServiceType(p.notes);
               return (
               <tr key={`${p._type}-${p.id}`} className="border-b border-border/50 cursor-pointer hover:bg-secondary/30 transition-colors"
                 onClick={() => { if (editingId !== p.id && markPaidId !== p.id) setViewPayment(p); }}>
@@ -645,6 +673,11 @@ export default function AdminPaymentsPage() {
                     <td className="py-3 pr-4">
                       <select className={inputClass + " w-24"} value={editForm.payment_method} onChange={(e) => setEditForm({ ...editForm, payment_method: e.target.value })}>
                         {PAYMENT_METHODS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+                      </select>
+                    </td>
+                    <td className="py-3 pr-4">
+                      <select className={inputClass + " w-28"} value={editForm.service_type || ""} onChange={(e) => setEditForm({ ...editForm, service_type: e.target.value })}>
+                        {SERVICE_TYPES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
                       </select>
                     </td>
                     <td className="py-3 pr-4"><input className={inputClass + " w-32"} type="date" value={editForm.due_date} onChange={(e) => setEditForm({ ...editForm, due_date: e.target.value })} /></td>
@@ -674,6 +707,7 @@ export default function AdminPaymentsPage() {
                     </td>
                     <td className="py-3 pr-4 font-medium">{fmt(p._amount)}</td>
                     <td className="py-3 pr-4 capitalize text-xs">{p.payment_method || "—"}{p.transaction_id ? <span className="block text-muted-foreground">TxID: {p.transaction_id}</span> : ""}</td>
+                    <td className="py-3 pr-4 text-xs">{pServiceLabel || "—"}</td>
                     <td className="py-3 pr-4 text-xs">
                       {p._type === "customer"
                         ? (p.paid_at ? new Date(p.paid_at).toLocaleDateString() : p.due_date ? new Date(p.due_date).toLocaleDateString() : "—")
@@ -1053,6 +1087,12 @@ export default function AdminPaymentsPage() {
               <label className="text-xs text-muted-foreground block mb-1">পদ্ধতি</label>
               <select className={inputClass} value={editForm.payment_method || "cash"} onChange={(e) => setEditForm({ ...editForm, payment_method: e.target.value })}>
                 {PAYMENT_METHODS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground block mb-1">সার্ভিস ধরন</label>
+              <select className={inputClass} value={editForm.service_type || ""} onChange={(e) => setEditForm({ ...editForm, service_type: e.target.value })}>
+                {SERVICE_TYPES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
               </select>
             </div>
             <div>
