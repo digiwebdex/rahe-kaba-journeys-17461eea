@@ -783,6 +783,7 @@ export async function generateReceipt(
     columnStyles: { 0: { fontStyle: "bold", cellWidth: 50 } },
     margin: { left: 14, right: 14 },
     tableWidth: 120,
+    didDrawCell: bengaliCellHook,
   });
 
   y = ((doc as any).lastAutoTable?.finalY || y + 40) + 8;
