@@ -11,7 +11,7 @@ import { differenceInDays, format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 import { exportPDF, exportExcel } from "@/lib/reportExport";
 
-const fmt = (n: number) => `৳${Number(n || 0).toLocaleString()}`;
+const fmt = (n: number) => `BDT ${Number(n || 0).toLocaleString()}`;
 
 interface BookingReceivable {
   id: string;

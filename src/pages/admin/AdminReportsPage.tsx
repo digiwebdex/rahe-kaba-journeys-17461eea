@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 import { exportPDF, exportExcel, exportHajjiPDF, exportHajjiExcel } from "@/lib/reportExport";
 import { useCanSeeProfit } from "@/components/admin/AdminLayout";
 
-const fmt = (n: number) => `৳${Number(n || 0).toLocaleString()}`;
+const fmt = (n: number) => `BDT ${Number(n || 0).toLocaleString()}`;
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
 export default function AdminReportsPage() {

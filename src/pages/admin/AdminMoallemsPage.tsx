@@ -21,7 +21,7 @@ import { Plus, Pencil, Trash2, Eye, Search, Users, ChevronLeft, ChevronRight, Fi
 import { exportPDF, exportExcel } from "@/lib/reportExport";
 import { normalizePhone, getPhoneError, handlePhoneChange } from "@/lib/phoneValidation";
 
-const fmt = (n: number) => `৳${n.toLocaleString()}`;
+const fmt = (n: number) => `BDT ${n.toLocaleString()}`;
 const PAGE_SIZE = 15;
 
 interface Moallem {

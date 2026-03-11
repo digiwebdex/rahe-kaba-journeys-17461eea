@@ -147,7 +147,7 @@ const TrackBooking = () => {
   // Determine if user owns this booking (can see full details)
   const isOwner = user && booking && booking.user_id === user.id;
 
-  const fmt = (n: number) => `৳${Number(n || 0).toLocaleString()}`;
+  const fmt = (n: number) => `BDT ${Number(n || 0).toLocaleString()}`;
 
   return (
     <div className="min-h-screen bg-background">

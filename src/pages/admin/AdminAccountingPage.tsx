@@ -10,23 +10,23 @@ import DailyCashbook from "@/components/admin/DailyCashbook";
 const inputClass = "w-full bg-secondary border border-border rounded-md px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40";
 
 const EXPENSE_TYPES = [
-  { value: "visa", label: "ভিসা খরচ" },
-  { value: "ticket", label: "টিকেট খরচ" },
-  { value: "hotel", label: "হোটেল খরচ" },
-  { value: "transport", label: "পরিবহন খরচ" },
-  { value: "food", label: "খাবার খরচ" },
-  { value: "guide", label: "গাইড খরচ" },
-  { value: "office", label: "অফিস খরচ" },
-  { value: "marketing", label: "মার্কেটিং খরচ" },
-  { value: "salary", label: "বেতন" },
-  { value: "other", label: "অন্যান্য" },
+  { value: "visa", label: "Visa Cost" },
+  { value: "ticket", label: "Ticket Cost" },
+  { value: "hotel", label: "Hotel Cost" },
+  { value: "transport", label: "Transport Cost" },
+  { value: "food", label: "Food Cost" },
+  { value: "guide", label: "Guide Cost" },
+  { value: "office", label: "Office Cost" },
+  { value: "marketing", label: "Marketing Cost" },
+  { value: "salary", label: "Salary" },
+  { value: "other", label: "Other" },
 ];
 
 const ASSIGN_TO = [
-  { value: "booking", label: "বুকিং" },
-  { value: "customer", label: "কাস্টমার" },
-  { value: "package", label: "প্যাকেজ" },
-  { value: "general", label: "সাধারণ অফিস" },
+  { value: "booking", label: "Booking" },
+  { value: "customer", label: "Customer" },
+  { value: "package", label: "Package" },
+  { value: "general", label: "General Office" },
 ];
 
 const PAYMENT_METHODS = [
@@ -45,14 +45,14 @@ const EMPTY_FORM = {
 };
 
 const TABS = [
-  { key: "cashbook", label: "দৈনিক ক্যাশবুক" },
+  { key: "cashbook", label: "Daily Cashbook" },
   { key: "expenses", label: "Expenses" },
   { key: "booking", label: "Booking Profit" },
   { key: "package", label: "Package Profit" },
   { key: "customer", label: "Customer Profit" },
 ];
 
-const fmt = (n: number) => `৳${Number(n || 0).toLocaleString()}`;
+const fmt = (n: number) => `BDT ${Number(n || 0).toLocaleString()}`;
 const normalizeDate = (d: string) => (d ? d.substring(0, 10) : "");
 
 export default function AdminAccountingPage() {

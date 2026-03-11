@@ -11,7 +11,7 @@ import AdminActionMenu from "@/components/admin/AdminActionMenu";
 import CustomerSearchSelect from "@/components/admin/CustomerSearchSelect";
 
 const inputClass = "w-full bg-secondary border border-border rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40";
-const fmt = (n: number) => `৳${Number(n || 0).toLocaleString()}`;
+const fmt = (n: number) => `BDT ${Number(n || 0).toLocaleString()}`;
 
 const PAYMENT_METHODS = [
   { value: "cash", label: "Cash" },
@@ -24,15 +24,15 @@ const PAYMENT_METHODS = [
 type PaymentType = "customer" | "moallem" | "supplier";
 
 const SERVICE_TYPES = [
-  { value: "", label: "-- সার্ভিস বাছাই করুন --" },
-  { value: "visa", label: "ভিসা (Visa)" },
-  { value: "ticket", label: "টিকেট (Ticket)" },
-  { value: "hajj", label: "হজ্জ (Hajj)" },
-  { value: "umrah", label: "উমরাহ (Umrah)" },
-  { value: "hotel", label: "হোটেল (Hotel)" },
-  { value: "transport", label: "পরিবহন (Transport)" },
-  { value: "food", label: "খাবার (Food)" },
-  { value: "other", label: "অন্যান্য (Other)" },
+  { value: "", label: "-- Select Service --" },
+  { value: "visa", label: "Visa" },
+  { value: "ticket", label: "Ticket" },
+  { value: "hajj", label: "Hajj" },
+  { value: "umrah", label: "Umrah" },
+  { value: "hotel", label: "Hotel" },
+  { value: "transport", label: "Transport" },
+  { value: "food", label: "Food" },
+  { value: "other", label: "Other" },
 ];
 
 // Extract service type from notes (format: "সার্ভিস লেবেল — actual notes")
