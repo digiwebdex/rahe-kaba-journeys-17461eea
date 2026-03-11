@@ -133,7 +133,7 @@ export default function AdminAccountingPage() {
       else toast.error(error.message);
       return;
     }
-    toast.success("খরচ রেকর্ড হয়েছে");
+    toast.success("Expense recorded successfully");
     setShowForm(false); setForm({ ...EMPTY_FORM });
     fetchData(); fetchProfitViews();
   };
