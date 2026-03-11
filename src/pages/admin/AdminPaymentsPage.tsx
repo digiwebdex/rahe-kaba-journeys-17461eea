@@ -837,27 +837,27 @@ export default function AdminPaymentsPage() {
             {/* Booking selection - searchable, always enabled */}
             <div>
               <label className="text-xs text-muted-foreground block mb-1">
-                বুকিং নির্বাচন {paymentType === "customer" ? "*" : "(ঐচ্ছিক)"}
+                Select Booking {paymentType === "customer" ? "*" : "(Optional)"}
               </label>
               <div className="relative mb-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                 <input
                   className={inputClass + " pl-9 !text-xs"}
-                  placeholder="ট্র্যাকিং ID, নাম, ফোন দিয়ে বুকিং খুঁজুন..."
+                  placeholder="Search by tracking ID, name, phone..."
                   value={bookingSearch}
                   onChange={(e) => setBookingSearch(e.target.value)}
                 />
               </div>
               <select className={inputClass} value={addForm.booking_id} onChange={(e) => handleBookingChange(e.target.value)}>
-                <option value="">-- বুকিং বাছাই করুন ({filteredBookings.length}টি) --</option>
+                <option value="">-- Select Booking ({filteredBookings.length}) --</option>
                 {filteredBookings.map((b) => (
                   <option key={b.id} value={b.id}>
-                    {b.tracking_id} — {b.guest_name || "N/A"} ({paymentType === "supplier" ? `সাপ্লায়ার বকেয়া: ${fmt(Number(b.supplier_due || 0))}` : paymentType === "moallem" ? `মোয়াল্লেম বকেয়া: ${fmt(Number(b.moallem_due || 0))}` : `বকেয়া: ${fmt(Number(b.due_amount || 0))}`})
+                    {b.tracking_id} — {b.guest_name || "N/A"} ({paymentType === "supplier" ? `Supplier Due: ${fmt(Number(b.supplier_due || 0))}` : paymentType === "moallem" ? `Moallem Due: ${fmt(Number(b.moallem_due || 0))}` : `Due: ${fmt(Number(b.due_amount || 0))}`})
                   </option>
                 ))}
               </select>
               {filteredBookings.length === 0 && bookingSearch && (
-                <p className="text-xs text-muted-foreground mt-1">কোনো বুকিং পাওয়া যায়নি।</p>
+                <p className="text-xs text-muted-foreground mt-1">No bookings found.</p>
               )}
             </div>
 
