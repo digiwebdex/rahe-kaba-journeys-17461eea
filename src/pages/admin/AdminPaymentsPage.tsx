@@ -796,7 +796,7 @@ export default function AdminPaymentsPage() {
             {/* Customer selection (optional for customer type) */}
             {paymentType === "customer" && (
               <div>
-                <label className="text-xs text-muted-foreground block mb-1">কাস্টমার নির্বাচন (ঐচ্ছিক)</label>
+                <label className="text-xs text-muted-foreground block mb-1">Select Customer (Optional)</label>
                 <CustomerSearchSelect
                   selectedId={addForm.customer_id || null}
                   onSelect={(c) => {
