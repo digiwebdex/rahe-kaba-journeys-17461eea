@@ -560,6 +560,7 @@ export async function generateCustomerPdf(data: CustomerPdfData, company: Compan
       styles: { fontSize: 7, font: "NotoSansBengali" },
       headStyles: { fillColor: [60, 70, 85] },
       margin: { left: 14, right: 14 },
+      didDrawCell: bengaliCellHook,
     });
   }
 
