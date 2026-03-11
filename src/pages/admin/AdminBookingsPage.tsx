@@ -573,7 +573,7 @@ export default function AdminBookingsPage() {
               {/* Payment History Chips */}
               {bookingPayments[b.id] && bookingPayments[b.id].length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-1.5">
-                  <span className="text-[10px] text-muted-foreground uppercase tracking-wide self-center mr-1">পেমেন্ট:</span>
+                  <span className="text-[10px] text-muted-foreground uppercase tracking-wide self-center mr-1">Payments:</span>
                   {bookingPayments[b.id].map((p: any) => (
                     <span key={p.id} className="inline-flex items-center gap-1 text-[11px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-full px-2.5 py-0.5 font-medium">
                       {new Date(p.paid_at).toLocaleDateString("en-GB")}: {fmt(p.amount)}
