@@ -673,7 +673,7 @@ export default function AdminAccountingPage() {
                   <div className="col-span-2"><span className="text-muted-foreground text-xs block">Package</span><span className="font-medium">📦 {getPackageLabel(viewExpense.package_id)}</span></div>
                 )}
                 {viewExpense.wallet_account_id && (
-                  <div className="col-span-2"><span className="text-muted-foreground text-xs block">ওয়ালেট</span><span className="font-medium">{walletAccounts.find(w => w.id === viewExpense.wallet_account_id)?.name || "—"}</span></div>
+                  <div className="col-span-2"><span className="text-muted-foreground text-xs block">Wallet</span><span className="font-medium">{walletAccounts.find(w => w.id === viewExpense.wallet_account_id)?.name || "—"}</span></div>
                 )}
               </div>
               {viewExpense.note && (
