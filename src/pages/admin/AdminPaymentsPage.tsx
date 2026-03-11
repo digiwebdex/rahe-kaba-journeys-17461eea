@@ -1096,7 +1096,7 @@ export default function AdminPaymentsPage() {
               </select>
             </div>
             <div>
-              <label className="text-xs text-muted-foreground block mb-1">তারিখ</label>
+              <label className="text-xs text-muted-foreground block mb-1">Date</label>
               <input className={inputClass} type="date" value={editForm.date || ""} onChange={(e) => setEditForm({ ...editForm, date: e.target.value })} />
             </div>
             <div>
