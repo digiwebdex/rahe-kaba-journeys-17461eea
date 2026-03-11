@@ -29,13 +29,19 @@ const SERVICE_TYPES = [
   { value: "ticket", label: "Ticket" },
   { value: "hajj", label: "Hajj" },
   { value: "umrah", label: "Umrah" },
+  { value: "full_package", label: "Full Package" },
   { value: "hotel", label: "Hotel" },
   { value: "transport", label: "Transport" },
   { value: "food", label: "Food" },
+  { value: "guide", label: "Guide" },
+  { value: "ziyarah", label: "Ziyarah" },
+  { value: "insurance", label: "Insurance" },
+  { value: "advance", label: "Advance" },
+  { value: "refund", label: "Refund" },
   { value: "other", label: "Other" },
 ];
 
-// Extract service type from notes (format: "সার্ভিস লেবেল — actual notes")
+// Extract service type from notes (format: "Service Label — actual notes")
 const extractServiceType = (notes: string | null): { serviceValue: string; serviceLabel: string; cleanNotes: string } => {
   if (!notes) return { serviceValue: "", serviceLabel: "", cleanNotes: "" };
   for (const st of SERVICE_TYPES) {
@@ -140,7 +146,7 @@ export default function AdminPaymentsPage() {
     const ext = receiptFile.name.split(".").pop();
     const path = `${paymentType}/${paymentId}/${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from("payment-receipts").upload(path, receiptFile, { upsert: true });
-    if (error) { toast.error("রিসিট আপলোড ব্যর্থ: " + error.message); return null; }
+    if (error) { toast.error("Receipt upload failed: " + error.message); return null; }
     return path;
   };
 

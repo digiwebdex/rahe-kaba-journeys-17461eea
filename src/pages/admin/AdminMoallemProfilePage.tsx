@@ -29,6 +29,7 @@ const SERVICE_TYPES = [
   { value: "ticket", label: "Ticket" },
   { value: "hajj", label: "Hajj" },
   { value: "umrah", label: "Umrah" },
+  { value: "full_package", label: "Full Package" },
   { value: "hotel", label: "Hotel" },
   { value: "transport", label: "Transport" },
   { value: "food", label: "Food" },
