@@ -363,7 +363,7 @@ export default function AdminAccountingPage() {
           <p className="text-2xl font-heading font-bold text-destructive">{fmt(totalExpenses)}</p>
         </div>
         <div className="bg-card border border-border rounded-lg p-4">
-          <p className="text-sm text-muted-foreground">নীট মুনাফা</p>
+          <p className="text-sm text-muted-foreground">Net Profit</p>
           <p className={`text-2xl font-heading font-bold ${netProfit >= 0 ? "text-emerald" : "text-destructive"}`}>{fmt(netProfit)}</p>
         </div>
       </div>
