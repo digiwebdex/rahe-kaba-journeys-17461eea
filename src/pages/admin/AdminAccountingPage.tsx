@@ -347,7 +347,7 @@ export default function AdminAccountingPage() {
           <p className="text-2xl font-heading font-bold text-emerald">{fmt(dailyIncome)}</p>
         </div>
         <div className="bg-card border border-destructive/30 rounded-lg p-4">
-          <p className="text-sm text-muted-foreground">আজকের খরচ ({today})</p>
+          <p className="text-sm text-muted-foreground">Today's Expense ({today})</p>
           <p className="text-2xl font-heading font-bold text-destructive">{fmt(dailyExpense)}</p>
         </div>
       </div>
