@@ -606,7 +606,7 @@ export default function AdminAccountingPage() {
                 </select>
               </div>
               <div>
-                <label className="text-xs text-muted-foreground block mb-1">তারিখ *</label>
+                <label className="text-xs text-muted-foreground block mb-1">Date *</label>
                 <input className={inputClass} type="date" required value={form.date}
                   onChange={(e) => setForm({ ...form, date: e.target.value })} />
               </div>
