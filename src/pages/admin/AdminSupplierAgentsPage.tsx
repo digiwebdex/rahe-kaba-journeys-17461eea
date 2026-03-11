@@ -23,7 +23,7 @@ import { exportPDF, exportExcel } from "@/lib/reportExport";
 import { normalizePhone, getPhoneError, handlePhoneChange } from "@/lib/phoneValidation";
 import { format } from "date-fns";
 
-const fmt = (n: number) => `৳${n.toLocaleString()}`;
+const fmt = (n: number) => `BDT ${n.toLocaleString()}`;
 const PAGE_SIZE = 15;
 
 interface SupplierAgent {

@@ -16,7 +16,7 @@ import { format } from "date-fns";
 import { exportPDF, exportExcel } from "@/lib/reportExport";
 import { FileDown, FileSpreadsheet } from "lucide-react";
 
-const fmt = (n: number) => `৳${Number(n || 0).toLocaleString()}`;
+const fmt = (n: number) => `BDT ${Number(n || 0).toLocaleString()}`;
 const PAYMENT_METHODS = ["cash", "bkash", "nagad", "bank", "other"];
 
 interface Props {
@@ -55,91 +55,82 @@ export default function SupplierContractManager({
   const handleCreateContract = async () => {
     const pilgrimCount = parseInt(contractForm.pilgrim_count);
     const contractAmount = parseFloat(contractForm.contract_amount);
-    if (!pilgrimCount || pilgrimCount <= 0) { toast({ title: "হজ্বী সংখ্যা দিন", variant: "destructive" }); return; }
-    if (!contractAmount || contractAmount <= 0) { toast({ title: "চুক্তির পরিমাণ দিন", variant: "destructive" }); return; }
+    if (!pilgrimCount || pilgrimCount <= 0) { toast({ title: "Enter pilgrim count", variant: "destructive" }); return; }
+    if (!contractAmount || contractAmount <= 0) { toast({ title: "Enter contract amount", variant: "destructive" }); return; }
     setLoading(true);
     try {
       const { error } = await supabase.from("supplier_contracts").insert({
-        supplier_id: supplierId,
-        pilgrim_count: pilgrimCount,
-        contract_amount: contractAmount,
-        total_paid: 0,
-        total_due: contractAmount,
+        supplier_id: supplierId, pilgrim_count: pilgrimCount,
+        contract_amount: contractAmount, total_paid: 0, total_due: contractAmount,
       });
       if (error) throw error;
-      toast({ title: "চুক্তি তৈরি হয়েছে" });
+      toast({ title: "Contract created" });
       setShowContractForm(false);
       setContractForm({ pilgrim_count: "", contract_amount: "" });
       onRefresh();
     } catch (err: any) {
-      toast({ title: "ত্রুটি", description: err.message, variant: "destructive" });
+      toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally { setLoading(false); }
   };
 
   const handleRecordPayment = async () => {
     const amount = parseFloat(paymentForm.amount);
-    if (!amount || amount <= 0) { toast({ title: "সঠিক পরিমাণ দিন", variant: "destructive" }); return; }
-    if (!selectedContractId) { toast({ title: "চুক্তি নির্বাচন করুন", variant: "destructive" }); return; }
+    if (!amount || amount <= 0) { toast({ title: "Enter a valid amount", variant: "destructive" }); return; }
+    if (!selectedContractId) { toast({ title: "Select a contract", variant: "destructive" }); return; }
     setLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
       const { error } = await supabase.from("supplier_contract_payments").insert({
-        supplier_id: supplierId,
-        contract_id: selectedContractId,
-        amount,
-        payment_method: paymentForm.payment_method,
-        payment_date: paymentForm.payment_date,
-        note: paymentForm.note.trim() || null,
-        wallet_account_id: paymentForm.wallet_account_id || null,
+        supplier_id: supplierId, contract_id: selectedContractId, amount,
+        payment_method: paymentForm.payment_method, payment_date: paymentForm.payment_date,
+        note: paymentForm.note.trim() || null, wallet_account_id: paymentForm.wallet_account_id || null,
         created_by: session.user.id,
       });
       if (error) throw error;
-      toast({ title: "পেমেন্ট রেকর্ড হয়েছে" });
+      toast({ title: "Payment recorded" });
       setShowPaymentForm(false);
       setPaymentForm({ amount: "", payment_method: "cash", payment_date: new Date().toISOString().split("T")[0], note: "", wallet_account_id: "" });
       setSelectedContractId("");
       onRefresh();
     } catch (err: any) {
-      toast({ title: "ত্রুটি", description: err.message, variant: "destructive" });
+      toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally { setLoading(false); }
   };
 
   return (
     <div className="space-y-4">
-      {/* Contract KPIs */}
       <div className="grid grid-cols-3 gap-3">
         <Card><CardContent className="pt-4 pb-4 text-center">
           <CreditCard className="h-5 w-5 text-primary mx-auto mb-1" />
           <p className="text-lg font-bold">{fmt(totalContractAmount)}</p>
-          <p className="text-[10px] text-muted-foreground uppercase">চুক্তির পরিমাণ</p>
+          <p className="text-[10px] text-muted-foreground uppercase">Contract Amount</p>
         </CardContent></Card>
         <Card><CardContent className="pt-4 pb-4 text-center">
           <Wallet className="h-5 w-5 text-emerald-500 mx-auto mb-1" />
           <p className="text-lg font-bold text-emerald-500">{fmt(totalContractPaid)}</p>
-          <p className="text-[10px] text-muted-foreground uppercase">পরিশোধিত</p>
+          <p className="text-[10px] text-muted-foreground uppercase">Paid</p>
         </CardContent></Card>
         <Card><CardContent className="pt-4 pb-4 text-center">
           <TrendingDown className="h-5 w-5 text-destructive mx-auto mb-1" />
           <p className="text-lg font-bold text-destructive">{fmt(totalContractDue)}</p>
-          <p className="text-[10px] text-muted-foreground uppercase">বকেয়া</p>
+          <p className="text-[10px] text-muted-foreground uppercase">Due</p>
         </CardContent></Card>
       </div>
 
-      {/* Contracts List */}
       <Card>
         <CardHeader className="pb-3 flex flex-row items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
-            <FileText className="h-4 w-4 text-primary" /> চুক্তি তালিকা ({contracts.length})
+            <FileText className="h-4 w-4 text-primary" /> Contracts ({contracts.length})
           </CardTitle>
           <div className="flex gap-2">
             {!isViewer && (
               <>
                 <Button size="sm" variant="outline" onClick={() => setShowPaymentForm(true)} disabled={contracts.length === 0}>
-                  <Plus className="h-4 w-4 mr-1" /> পেমেন্ট
+                  <Plus className="h-4 w-4 mr-1" /> Payment
                 </Button>
                 <Button size="sm" onClick={() => setShowContractForm(true)}>
-                  <Plus className="h-4 w-4 mr-1" /> চুক্তি
+                  <Plus className="h-4 w-4 mr-1" /> Contract
                 </Button>
               </>
             )}
@@ -147,17 +138,17 @@ export default function SupplierContractManager({
         </CardHeader>
         <CardContent>
           {contracts.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-6">কোনো চুক্তি নেই</p>
+            <p className="text-sm text-muted-foreground text-center py-6">No contracts yet</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead><tr className="border-b border-border text-left text-muted-foreground text-xs">
-                  <th className="pb-2 pr-3">তারিখ</th>
-                  <th className="pb-2 pr-3">হজ্বী সংখ্যা</th>
-                  <th className="pb-2 pr-3">চুক্তির পরিমাণ</th>
-                  <th className="pb-2 pr-3">পরিশোধিত</th>
-                  <th className="pb-2 pr-3">বকেয়া</th>
-                  <th className="pb-2">স্ট্যাটাস</th>
+                  <th className="pb-2 pr-3">Date</th>
+                  <th className="pb-2 pr-3">Pilgrims</th>
+                  <th className="pb-2 pr-3">Contract Amount</th>
+                  <th className="pb-2 pr-3">Paid</th>
+                  <th className="pb-2 pr-3">Due</th>
+                  <th className="pb-2">Status</th>
                 </tr></thead>
                 <tbody>
                   {contracts.map((c: any) => (
@@ -169,7 +160,7 @@ export default function SupplierContractManager({
                       <td className="py-2 pr-3 text-destructive font-medium">{fmt(c.total_due)}</td>
                       <td className="py-2">
                         <Badge variant={Number(c.total_due) <= 0 ? "default" : "secondary"} className="text-[10px]">
-                          {Number(c.total_due) <= 0 ? "পরিশোধিত" : "বকেয়া আছে"}
+                          {Number(c.total_due) <= 0 ? "Paid" : "Outstanding"}
                         </Badge>
                       </td>
                     </tr>
@@ -181,46 +172,33 @@ export default function SupplierContractManager({
         </CardContent>
       </Card>
 
-      {/* Contract Payment History */}
       <Card>
         <CardHeader className="pb-3 flex flex-row items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
-            <Wallet className="h-4 w-4 text-primary" /> চুক্তি পেমেন্ট হিস্ট্রি ({contractPayments.length})
+            <Wallet className="h-4 w-4 text-primary" /> Contract Payment History ({contractPayments.length})
           </CardTitle>
           <div className="flex gap-1">
             <Button size="sm" variant="ghost" onClick={() => {
-              exportPDF({
-                title: `${supplierName} — Contract Payments`,
-                columns: ["Date", "Amount", "Method", "Note"],
-                rows: contractPayments.map(p => [
-                  format(new Date(p.payment_date), "dd MMM yyyy"),
-                  Number(p.amount), p.payment_method || "cash", p.note || "—",
-                ]),
-              });
+              exportPDF({ title: `${supplierName} — Contract Payments`, columns: ["Date", "Amount", "Method", "Note"],
+                rows: contractPayments.map(p => [format(new Date(p.payment_date), "dd MMM yyyy"), Number(p.amount), p.payment_method || "cash", p.note || "—"]) });
             }}><FileDown className="h-4 w-4" /></Button>
             <Button size="sm" variant="ghost" onClick={() => {
-              exportExcel({
-                title: `${supplierName} — Contract Payments`,
-                columns: ["Date", "Amount", "Method", "Note"],
-                rows: contractPayments.map(p => [
-                  format(new Date(p.payment_date), "dd MMM yyyy"),
-                  Number(p.amount), p.payment_method || "cash", p.note || "—",
-                ]),
-              });
+              exportExcel({ title: `${supplierName} — Contract Payments`, columns: ["Date", "Amount", "Method", "Note"],
+                rows: contractPayments.map(p => [format(new Date(p.payment_date), "dd MMM yyyy"), Number(p.amount), p.payment_method || "cash", p.note || "—"]) });
             }}><FileSpreadsheet className="h-4 w-4" /></Button>
           </div>
         </CardHeader>
         <CardContent>
           {contractPayments.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-6">কোনো পেমেন্ট নেই</p>
+            <p className="text-sm text-muted-foreground text-center py-6">No payments yet</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead><tr className="border-b border-border text-left text-muted-foreground text-xs">
-                  <th className="pb-2 pr-3">তারিখ</th>
-                  <th className="pb-2 pr-3">পরিমাণ</th>
-                  <th className="pb-2 pr-3">পদ্ধতি</th>
-                  <th className="pb-2">নোট</th>
+                  <th className="pb-2 pr-3">Date</th>
+                  <th className="pb-2 pr-3">Amount</th>
+                  <th className="pb-2 pr-3">Method</th>
+                  <th className="pb-2">Notes</th>
                 </tr></thead>
                 <tbody>
                   {contractPayments.map((p: any) => (
@@ -238,77 +216,75 @@ export default function SupplierContractManager({
         </CardContent>
       </Card>
 
-      {/* Create Contract Dialog */}
       <Dialog open={showContractForm} onOpenChange={setShowContractForm}>
         <DialogContent>
-          <DialogHeader><DialogTitle>নতুন চুক্তি তৈরি</DialogTitle><DialogDescription>সাপ্লায়ার চুক্তির তথ্য দিন</DialogDescription></DialogHeader>
+          <DialogHeader><DialogTitle>New Contract</DialogTitle><DialogDescription>Enter supplier contract details</DialogDescription></DialogHeader>
           <div className="space-y-3">
             <div>
-              <label className="text-xs text-muted-foreground block mb-1">হজ্বী সংখ্যা *</label>
+              <label className="text-xs text-muted-foreground block mb-1">Pilgrim Count *</label>
               <Input type="number" min={1} value={contractForm.pilgrim_count} onChange={e => setContractForm({ ...contractForm, pilgrim_count: e.target.value })} />
             </div>
             <div>
-              <label className="text-xs text-muted-foreground block mb-1">চুক্তির পরিমাণ (৳) *</label>
+              <label className="text-xs text-muted-foreground block mb-1">Contract Amount (BDT) *</label>
               <Input type="number" min={0} value={contractForm.contract_amount} onChange={e => setContractForm({ ...contractForm, contract_amount: e.target.value })} />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowContractForm(false)}>বাতিল</Button>
-            <Button onClick={handleCreateContract} disabled={loading}>{loading ? "সেভ হচ্ছে..." : "তৈরি করুন"}</Button>
+            <Button variant="outline" onClick={() => setShowContractForm(false)}>Cancel</Button>
+            <Button onClick={handleCreateContract} disabled={loading}>{loading ? "Saving..." : "Create"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Record Payment Dialog */}
       <Dialog open={showPaymentForm} onOpenChange={setShowPaymentForm}>
         <DialogContent>
-          <DialogHeader><DialogTitle>চুক্তি পেমেন্ট রেকর্ড</DialogTitle><DialogDescription>পেমেন্ট তথ্য দিন</DialogDescription></DialogHeader>
+          <DialogHeader><DialogTitle>Record Contract Payment</DialogTitle><DialogDescription>Enter payment details</DialogDescription></DialogHeader>
           <div className="space-y-3">
             <div>
-              <label className="text-xs text-muted-foreground block mb-1">চুক্তি নির্বাচন করুন *</label>
+              <label className="text-xs text-muted-foreground block mb-1">Select Contract *</label>
               <Select value={selectedContractId} onValueChange={setSelectedContractId}>
-                <SelectTrigger><SelectValue placeholder="-- চুক্তি --" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="-- Contract --" /></SelectTrigger>
                 <SelectContent>
                   {contracts.filter(c => Number(c.total_due) > 0).map(c => (
                     <SelectItem key={c.id} value={c.id}>
-                      {format(new Date(c.created_at), "dd MMM yyyy")} — {c.pilgrim_count} জন — বকেয়া: {fmt(c.total_due)}
+                      {format(new Date(c.created_at), "dd MMM yyyy")} — {c.pilgrim_count} pilgrims — Due: {fmt(c.total_due)}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <label className="text-xs text-muted-foreground block mb-1">পরিমাণ (৳) *</label>
+              <label className="text-xs text-muted-foreground block mb-1">Amount (BDT) *</label>
               <Input type="number" min={0} value={paymentForm.amount} onChange={e => setPaymentForm({ ...paymentForm, amount: e.target.value })} />
             </div>
             <div>
-              <label className="text-xs text-muted-foreground block mb-1">পদ্ধতি</label>
+              <label className="text-xs text-muted-foreground block mb-1">Method</label>
               <Select value={paymentForm.payment_method} onValueChange={v => setPaymentForm({ ...paymentForm, payment_method: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>{PAYMENT_METHODS.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div>
-              <label className="text-xs text-muted-foreground block mb-1">তারিখ</label>
+              <label className="text-xs text-muted-foreground block mb-1">Date</label>
               <Input type="date" value={paymentForm.payment_date} onChange={e => setPaymentForm({ ...paymentForm, payment_date: e.target.value })} />
             </div>
             {walletAccounts.length > 0 && (
               <div>
-                <label className="text-xs text-muted-foreground block mb-1">ওয়ালেট</label>
+                <label className="text-xs text-muted-foreground block mb-1">Wallet</label>
                 <Select value={paymentForm.wallet_account_id} onValueChange={v => setPaymentForm({ ...paymentForm, wallet_account_id: v })}>
-                  <SelectTrigger><SelectValue placeholder="-- ওয়ালেট --" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="-- Wallet --" /></SelectTrigger>
                   <SelectContent>{walletAccounts.map(a => <SelectItem key={a.id} value={a.id}>{a.name} ({fmt(a.balance)})</SelectItem>)}</SelectContent>
                 </Select>
               </div>
             )}
             <div>
-              <label className="text-xs text-muted-foreground block mb-1">নোট</label>
-              <Input value={paymentForm.note} onChange={e => setPaymentForm({ ...paymentForm, note: e.target.value })} placeholder="নোট..." />
+              <label className="text-xs text-muted-foreground block mb-1">Notes</label>
+              <Input value={paymentForm.note} onChange={e => setPaymentForm({ ...paymentForm, note: e.target.value })} placeholder="Notes..." />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowPaymentForm(false)}>বাতিল</Button>
-            <Button onClick={handleRecordPayment} disabled={loading}>{loading ? "সেভ হচ্ছে..." : "সেভ করুন"}</Button>
+            <Button variant="outline" onClick={() => setShowPaymentForm(false)}>Cancel</Button>
+            <Button onClick={handleRecordPayment} disabled={loading}>{loading ? "Saving..." : "Save"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

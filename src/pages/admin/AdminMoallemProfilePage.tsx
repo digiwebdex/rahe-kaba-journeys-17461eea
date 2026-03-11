@@ -21,23 +21,23 @@ import {
 import { format } from "date-fns";
 import { generateMoallemPdf, getCompanyInfoForPdf, MoallemPdfData } from "@/lib/entityPdfGenerator";
 
-const fmt = (n: number) => `৳${Number(n || 0).toLocaleString()}`;
+const fmt = (n: number) => `BDT ${Number(n || 0).toLocaleString()}`;
 const PAYMENT_METHODS = ["cash", "bkash", "nagad", "bank", "other"];
 const SERVICE_TYPES = [
-  { value: "", label: "-- সার্ভিস নির্বাচন করুন --" },
-  { value: "visa", label: "ভিসা" },
-  { value: "ticket", label: "টিকেট" },
-  { value: "hajj", label: "হজ্জ" },
-  { value: "umrah", label: "উমরাহ" },
-  { value: "hotel", label: "হোটেল" },
-  { value: "transport", label: "পরিবহন" },
-  { value: "food", label: "খাবার" },
-  { value: "guide", label: "গাইড" },
-  { value: "ziyarah", label: "জিয়ারত" },
-  { value: "insurance", label: "বীমা" },
-  { value: "advance", label: "অগ্রিম" },
-  { value: "refund", label: "ফেরত" },
-  { value: "other", label: "অন্যান্য" },
+  { value: "", label: "-- Select Service --" },
+  { value: "visa", label: "Visa" },
+  { value: "ticket", label: "Ticket" },
+  { value: "hajj", label: "Hajj" },
+  { value: "umrah", label: "Umrah" },
+  { value: "hotel", label: "Hotel" },
+  { value: "transport", label: "Transport" },
+  { value: "food", label: "Food" },
+  { value: "guide", label: "Guide" },
+  { value: "ziyarah", label: "Ziyarah" },
+  { value: "insurance", label: "Insurance" },
+  { value: "advance", label: "Advance" },
+  { value: "refund", label: "Refund" },
+  { value: "other", label: "Other" },
 ];
 
 export default function AdminMoallemProfilePage() {

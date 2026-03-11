@@ -8,37 +8,37 @@ import { useCanModifyFinancials } from "@/components/admin/AdminLayout";
 const inputClass = "w-full bg-secondary border border-border rounded-md px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40";
 
 const INCOME_CATEGORIES = [
-  { value: "customer_payment", label: "কাস্টমার পেমেন্ট" },
-  { value: "moallem_payment", label: "মোয়াল্লেম জমা" },
-  { value: "umrah_payment", label: "উমরাহ পেমেন্ট" },
-  { value: "agent_payment", label: "এজেন্ট পেমেন্ট" },
-  { value: "other_income", label: "অন্যান্য আয়" },
+  { value: "customer_payment", label: "Customer Payment" },
+  { value: "moallem_payment", label: "Moallem Deposit" },
+  { value: "umrah_payment", label: "Umrah Payment" },
+  { value: "agent_payment", label: "Agent Payment" },
+  { value: "other_income", label: "Other Income" },
 ];
 
 const EXPENSE_CATEGORIES = [
-  { value: "car_rent", label: "গাড়ী ভাড়া" },
-  { value: "salary", label: "বেতন" },
-  { value: "office", label: "অফিস খরচ" },
-  { value: "ticket", label: "টিকেট খরচ" },
-  { value: "visa", label: "ভিসা খরচ" },
-  { value: "hotel", label: "হোটেল খরচ" },
-  { value: "food", label: "খাবার খরচ" },
-  { value: "transport", label: "পরিবহন খরচ" },
-  { value: "inventory", label: "ইমন্তেরি খরচ" },
-  { value: "commission", label: "কমিশন" },
-  { value: "marketing", label: "মার্কেটিং" },
-  { value: "other_expense", label: "অন্যান্য খরচ" },
+  { value: "car_rent", label: "Car Rent" },
+  { value: "salary", label: "Salary" },
+  { value: "office", label: "Office Expense" },
+  { value: "ticket", label: "Ticket Cost" },
+  { value: "visa", label: "Visa Cost" },
+  { value: "hotel", label: "Hotel Cost" },
+  { value: "food", label: "Food Cost" },
+  { value: "transport", label: "Transport Cost" },
+  { value: "inventory", label: "Inventory Cost" },
+  { value: "commission", label: "Commission" },
+  { value: "marketing", label: "Marketing" },
+  { value: "other_expense", label: "Other Expense" },
 ];
 
 const PAYMENT_METHODS = [
-  { value: "cash", label: "ক্যাশ" },
-  { value: "bkash", label: "বিকাশ" },
-  { value: "nagad", label: "নগদ" },
-  { value: "bank", label: "ব্যাংক" },
-  { value: "manual", label: "ম্যানুয়াল" },
+  { value: "cash", label: "Cash" },
+  { value: "bkash", label: "bKash" },
+  { value: "nagad", label: "Nagad" },
+  { value: "bank", label: "Bank" },
+  { value: "manual", label: "Manual" },
 ];
 
-const fmt = (n: number) => `৳${Number(n || 0).toLocaleString()}`;
+const fmt = (n: number) => `BDT ${Number(n || 0).toLocaleString()}`;
 
 const EMPTY_FORM = {
   type: "income" as "income" | "expense",
@@ -80,8 +80,8 @@ export default function DailyCashbook({ onEntriesChanged }: DailyCashbookProps =
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.description.trim()) { toast.error("নাম/বিবরণ আবশ্যক"); return; }
-    if (!form.amount || parseFloat(form.amount) <= 0) { toast.error("সঠিক পরিমাণ দিন"); return; }
+    if (!form.description.trim()) { toast.error("Description is required"); return; }
+    if (!form.amount || parseFloat(form.amount) <= 0) { toast.error("Enter a valid amount"); return; }
     const payload: any = {
       type: form.type,
       description: form.description.trim(),
@@ -94,7 +94,7 @@ export default function DailyCashbook({ onEntriesChanged }: DailyCashbookProps =
     };
     const { error } = await supabase.from("daily_cashbook" as any).insert(payload);
     if (error) { toast.error(error.message); return; }
-    toast.success(form.type === "income" ? "জমা রেকর্ড হয়েছে" : "খরচ রেকর্ড হয়েছে");
+    toast.success(form.type === "income" ? "Income recorded" : "Expense recorded");
     setShowForm(false);
     setForm({ ...EMPTY_FORM });
     await fetchData();
@@ -118,7 +118,7 @@ export default function DailyCashbook({ onEntriesChanged }: DailyCashbookProps =
       payment_method: editForm.payment_method, notes: editForm.notes || null, date: editForm.date,
     }).eq("id", editingId);
     if (error) { toast.error(error.message); return; }
-    toast.success("আপডেট হয়েছে");
+    toast.success("Updated successfully");
     setEditingId(null);
     await fetchData();
     await onEntriesChanged?.();
@@ -128,16 +128,14 @@ export default function DailyCashbook({ onEntriesChanged }: DailyCashbookProps =
     if (!deleteId) return;
     const { error } = await supabase.from("daily_cashbook" as any).delete().eq("id", deleteId);
     if (error) { toast.error(error.message); return; }
-    toast.success("মুছে ফেলা হয়েছে");
+    toast.success("Deleted successfully");
     setDeleteId(null);
     await fetchData();
     await onEntriesChanged?.();
   };
 
-  // Normalize date to YYYY-MM-DD (handles ISO timestamps from API)
   const normalizeDate = (d: string) => d ? d.substring(0, 10) : "";
 
-  // Filter by selected date and type
   const filtered = useMemo(() => {
     return entries.filter((e: any) => {
       if (normalizeDate(e.date) !== selectedDate) return false;
@@ -165,7 +163,6 @@ export default function DailyCashbook({ onEntriesChanged }: DailyCashbookProps =
     return walletAccounts.find((w: any) => w.id === id)?.name || "—";
   };
 
-  // Group entries by date for summary
   const dateGroups = useMemo(() => {
     const groups: Record<string, { income: number; expense: number; count: number }> = {};
     entries.forEach((e: any) => {
@@ -181,10 +178,9 @@ export default function DailyCashbook({ onEntriesChanged }: DailyCashbookProps =
   const handleExportPDF = async () => {
     try {
       if (!filtered.length) {
-        toast.error("এই তারিখে এক্সপোর্ট করার মতো ডেটা নেই");
+        toast.error("No data to export for this date");
         return;
       }
-
       await exportPDF({
         title: `Daily Cashbook ${selectedDate}`,
         columns: ["Type", "Description", "Category", "Amount", "Method"],
@@ -206,10 +202,9 @@ export default function DailyCashbook({ onEntriesChanged }: DailyCashbookProps =
   const handleExportExcel = () => {
     try {
       if (!filtered.length) {
-        toast.error("এই তারিখে এক্সপোর্ট করার মতো ডেটা নেই");
+        toast.error("No data to export for this date");
         return;
       }
-
       exportExcel({
         title: `Daily Cashbook ${selectedDate}`,
         columns: ["Type", "Description", "Category", "Amount", "Method"],
@@ -232,21 +227,21 @@ export default function DailyCashbook({ onEntriesChanged }: DailyCashbookProps =
       {/* Header */}
       <div className="flex flex-wrap items-center gap-3 mb-4">
         <div className="flex items-center gap-2">
-          <label className="text-sm text-muted-foreground">তারিখ:</label>
+          <label className="text-sm text-muted-foreground">Date:</label>
           <input type="date" className={inputClass + " w-auto"} value={selectedDate} onChange={e => setSelectedDate(e.target.value)} />
         </div>
         <div className="flex items-center gap-1">
           {(["all", "income", "expense"] as const).map(t => (
             <button key={t} onClick={() => setViewType(t)}
               className={`text-xs px-3 py-1.5 rounded-md transition-colors ${viewType === t ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
-              {t === "all" ? "সকল" : t === "income" ? "জমা" : "খরচ"}
+              {t === "all" ? "All" : t === "income" ? "Income" : "Expense"}
             </button>
           ))}
         </div>
         <div className="flex items-center gap-2 ml-auto">
           {canModify && (
             <button onClick={() => setShowForm(true)} className="inline-flex items-center gap-1.5 text-sm bg-gradient-gold text-primary-foreground font-semibold px-4 py-2 rounded-md hover:opacity-90 transition-opacity shadow-gold">
-              <Plus className="h-4 w-4" /> নতুন এন্ট্রি
+              <Plus className="h-4 w-4" /> New Entry
             </button>
           )}
           <button onClick={handleExportPDF} className="inline-flex items-center gap-1 text-xs bg-secondary px-3 py-1.5 rounded-md hover:bg-muted"><FileDown className="h-3.5 w-3.5" />PDF</button>
@@ -257,15 +252,15 @@ export default function DailyCashbook({ onEntriesChanged }: DailyCashbookProps =
       {/* Daily Summary */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div className="bg-card border border-emerald/30 rounded-lg p-4">
-          <p className="text-sm text-muted-foreground">মোট জমা</p>
+          <p className="text-sm text-muted-foreground">Total Income</p>
           <p className="text-2xl font-heading font-bold text-emerald">{fmt(dailyIncome)}</p>
         </div>
         <div className="bg-card border border-destructive/30 rounded-lg p-4">
-          <p className="text-sm text-muted-foreground">মোট খরচ</p>
+          <p className="text-sm text-muted-foreground">Total Expense</p>
           <p className="text-2xl font-heading font-bold text-destructive">{fmt(dailyExpense)}</p>
         </div>
         <div className={`bg-card border rounded-lg p-4 ${dailyBalance >= 0 ? "border-emerald/30" : "border-destructive/30"}`}>
-          <p className="text-sm text-muted-foreground">ব্যালেন্স</p>
+          <p className="text-sm text-muted-foreground">Balance</p>
           <p className={`text-2xl font-heading font-bold ${dailyBalance >= 0 ? "text-emerald" : "text-destructive"}`}>
             {dailyBalance >= 0 ? <TrendingUp className="inline h-5 w-5 mr-1" /> : <TrendingDown className="inline h-5 w-5 mr-1" />}
             {fmt(Math.abs(dailyBalance))}
@@ -278,7 +273,7 @@ export default function DailyCashbook({ onEntriesChanged }: DailyCashbookProps =
         {dateGroups.map(([date, data]) => (
           <button key={date} onClick={() => setSelectedDate(date)}
             className={`bg-card border rounded-lg p-2 text-center text-xs transition-colors hover:border-primary/50 ${selectedDate === date ? "border-primary ring-1 ring-primary/30" : "border-border"}`}>
-            <p className="font-medium text-foreground mb-1">{new Date(date + 'T00:00:00').toLocaleDateString('bn-BD', { day: 'numeric', month: 'short' })}</p>
+            <p className="font-medium text-foreground mb-1">{new Date(date + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</p>
             <p className="text-emerald">{fmt(data.income)}</p>
             <p className="text-destructive">{fmt(data.expense)}</p>
           </button>
@@ -290,24 +285,23 @@ export default function DailyCashbook({ onEntriesChanged }: DailyCashbookProps =
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={() => setShowForm(false)}>
           <div className="bg-card border border-border rounded-xl p-6 w-full max-w-lg shadow-xl" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-4">
-              <h3 className="font-heading text-lg font-bold">নতুন এন্ট্রি</h3>
+              <h3 className="font-heading text-lg font-bold">New Entry</h3>
               <button onClick={() => setShowForm(false)}><X className="h-5 w-5" /></button>
             </div>
             <form onSubmit={handleCreate} className="space-y-3">
-              {/* Type Toggle */}
               <div className="flex gap-2">
                 <button type="button" onClick={() => setForm({ ...form, type: "income", category: "customer_payment" })}
                   className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${form.type === "income" ? "bg-emerald/20 text-emerald border border-emerald/40" : "bg-secondary text-muted-foreground"}`}>
-                  জমা (Income)
+                  Income
                 </button>
                 <button type="button" onClick={() => setForm({ ...form, type: "expense", category: "car_rent" })}
                   className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${form.type === "expense" ? "bg-destructive/20 text-destructive border border-destructive/40" : "bg-secondary text-muted-foreground"}`}>
-                  খরচ (Expense)
+                  Expense
                 </button>
               </div>
 
-              <input className={inputClass} placeholder="নাম / বিবরণ *" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
-              <input className={inputClass} type="number" placeholder="পরিমাণ (৳) *" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} min="1" />
+              <input className={inputClass} placeholder="Description *" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
+              <input className={inputClass} type="number" placeholder="Amount (BDT) *" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} min="1" />
               
               <div className="grid grid-cols-2 gap-3">
                 <select className={inputClass} value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
@@ -322,16 +316,16 @@ export default function DailyCashbook({ onEntriesChanged }: DailyCashbookProps =
 
               <div className="grid grid-cols-2 gap-3">
                 <select className={inputClass} value={form.wallet_account_id} onChange={e => setForm({ ...form, wallet_account_id: e.target.value })}>
-                  <option value="">ওয়ালেট সিলেক্ট করুন</option>
+                  <option value="">Select Wallet</option>
                   {walletAccounts.map((w: any) => <option key={w.id} value={w.id}>{w.name} ({fmt(w.balance)})</option>)}
                 </select>
                 <input className={inputClass} type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} />
               </div>
 
-              <input className={inputClass} placeholder="নোট (ঐচ্ছিক)" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
+              <input className={inputClass} placeholder="Notes (optional)" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
               
               <button type="submit" className="w-full bg-gradient-gold text-primary-foreground font-semibold py-2.5 rounded-md hover:opacity-90 transition-opacity shadow-gold">
-                {form.type === "income" ? "জমা রেকর্ড করুন" : "খরচ রেকর্ড করুন"}
+                {form.type === "income" ? "Record Income" : "Record Expense"}
               </button>
             </form>
           </div>
@@ -342,162 +336,71 @@ export default function DailyCashbook({ onEntriesChanged }: DailyCashbookProps =
       {deleteId && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={() => setDeleteId(null)}>
           <div className="bg-card border border-border rounded-xl p-6 w-full max-w-sm shadow-xl" onClick={e => e.stopPropagation()}>
-            <h3 className="font-heading text-lg font-bold mb-3">মুছে ফেলতে চান?</h3>
-            <p className="text-sm text-muted-foreground mb-4">এই এন্ট্রিটি স্থায়ীভাবে মুছে যাবে।</p>
+            <h3 className="font-heading text-lg font-bold mb-3">Delete this entry?</h3>
+            <p className="text-sm text-muted-foreground mb-4">This entry will be permanently deleted.</p>
             <div className="flex gap-2 justify-end">
-              <button onClick={() => setDeleteId(null)} className="px-4 py-2 text-sm bg-secondary rounded-md">বাতিল</button>
-              <button onClick={confirmDelete} className="px-4 py-2 text-sm bg-destructive text-white rounded-md">মুছুন</button>
+              <button onClick={() => setDeleteId(null)} className="px-4 py-2 text-sm bg-secondary rounded-md">Cancel</button>
+              <button onClick={confirmDelete} className="px-4 py-2 text-sm bg-destructive text-white rounded-md">Delete</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Entry List */}
+      {/* Entries List */}
       <div className="space-y-2">
-        {filtered.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">
-            <p className="text-lg mb-1">কোনো এন্ট্রি নেই</p>
-            <p className="text-sm">{selectedDate} তারিখে কোনো জমা/খরচ রেকর্ড পাওয়া যায়নি</p>
+        {filtered.map((e: any) => (
+          <div key={e.id} className="bg-card border border-border rounded-lg p-4">
+            {editingId === e.id ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div className="flex gap-2 sm:col-span-3">
+                  <button type="button" onClick={() => setEditForm({ ...editForm, type: "income" })}
+                    className={`flex-1 py-1.5 rounded text-xs font-medium ${editForm.type === "income" ? "bg-emerald/20 text-emerald" : "bg-secondary text-muted-foreground"}`}>Income</button>
+                  <button type="button" onClick={() => setEditForm({ ...editForm, type: "expense" })}
+                    className={`flex-1 py-1.5 rounded text-xs font-medium ${editForm.type === "expense" ? "bg-destructive/20 text-destructive" : "bg-secondary text-muted-foreground"}`}>Expense</button>
+                </div>
+                <input className={inputClass} value={editForm.description} onChange={ev => setEditForm({ ...editForm, description: ev.target.value })} />
+                <input className={inputClass} type="number" value={editForm.amount} onChange={ev => setEditForm({ ...editForm, amount: ev.target.value })} />
+                <select className={inputClass} value={editForm.category} onChange={ev => setEditForm({ ...editForm, category: ev.target.value })}>
+                  {(editForm.type === "income" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES).map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                </select>
+                <select className={inputClass} value={editForm.payment_method} onChange={ev => setEditForm({ ...editForm, payment_method: ev.target.value })}>
+                  {PAYMENT_METHODS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+                </select>
+                <input className={inputClass} type="date" value={editForm.date} onChange={ev => setEditForm({ ...editForm, date: ev.target.value })} />
+                <input className={inputClass} placeholder="Notes" value={editForm.notes} onChange={ev => setEditForm({ ...editForm, notes: ev.target.value })} />
+                <div className="flex gap-2 items-center sm:col-span-3">
+                  <button onClick={saveEdit} className="text-xs bg-primary text-primary-foreground px-3 py-1.5 rounded-md flex items-center gap-1"><Save className="h-3 w-3" /> Save</button>
+                  <button onClick={() => setEditingId(null)} className="text-xs bg-secondary px-3 py-1.5 rounded-md">Cancel</button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${e.type === "income" ? "bg-emerald/10 text-emerald" : "bg-destructive/10 text-destructive"}`}>
+                      {e.type === "income" ? "Income" : "Expense"}
+                    </span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-secondary text-muted-foreground">{getCategoryLabel(e.type, e.category)}</span>
+                    <span className="text-[10px] text-muted-foreground">{PAYMENT_METHODS.find(m => m.value === e.payment_method)?.label || e.payment_method}</span>
+                  </div>
+                  <p className="font-medium text-sm truncate">{e.description}</p>
+                  {e.notes && <p className="text-xs text-muted-foreground truncate">{e.notes}</p>}
+                  {e.wallet_account_id && <p className="text-[10px] text-muted-foreground">Wallet: {getWalletName(e.wallet_account_id)}</p>}
+                </div>
+                <div className="flex items-center gap-3 shrink-0">
+                  <p className={`font-heading font-bold ${e.type === "income" ? "text-emerald" : "text-destructive"}`}>{fmt(e.amount)}</p>
+                  {canModify && (
+                    <div className="flex gap-1">
+                      <button onClick={() => startEdit(e)} className="text-muted-foreground hover:text-foreground"><Edit2 className="h-3.5 w-3.5" /></button>
+                      <button onClick={() => setDeleteId(e.id)} className="text-destructive hover:underline"><Trash2 className="h-3.5 w-3.5" /></button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
-        ) : (
-          <>
-            {/* Income Section */}
-            {(viewType === "all" || viewType === "income") && filtered.filter(e => e.type === "income").length > 0 && (
-              <div className="mb-4">
-                <h4 className="text-sm font-semibold text-emerald mb-2 flex items-center gap-1"><TrendingUp className="h-4 w-4" /> জমা ({filtered.filter(e => e.type === "income").length})</h4>
-                <div className="bg-card border border-emerald/20 rounded-lg overflow-hidden">
-                  <table className="w-full text-sm">
-                    <thead><tr className="border-b border-border bg-secondary/50">
-                      <th className="text-left px-4 py-2 text-xs text-muted-foreground">নাম/বিবরণ</th>
-                      <th className="text-left px-4 py-2 text-xs text-muted-foreground">ক্যাটাগরি</th>
-                      <th className="text-left px-4 py-2 text-xs text-muted-foreground">পদ্ধতি</th>
-                      <th className="text-left px-4 py-2 text-xs text-muted-foreground">ওয়ালেট</th>
-                      <th className="text-right px-4 py-2 text-xs text-muted-foreground">পরিমাণ</th>
-                      {canModify && <th className="text-right px-4 py-2 text-xs text-muted-foreground">অ্যাকশন</th>}
-                    </tr></thead>
-                    <tbody>
-                      {filtered.filter(e => e.type === "income").map(entry => (
-                        editingId === entry.id ? (
-                          <tr key={entry.id} className="border-b border-border">
-                            <td className="px-3 py-1.5"><input className={inputClass} value={editForm.description} onChange={e => setEditForm({ ...editForm, description: e.target.value })} /></td>
-                            <td className="px-3 py-1.5">
-                              <select className={inputClass} value={editForm.category} onChange={e => setEditForm({ ...editForm, category: e.target.value })}>
-                                {INCOME_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-                              </select>
-                            </td>
-                            <td className="px-3 py-1.5">
-                              <select className={inputClass} value={editForm.payment_method} onChange={e => setEditForm({ ...editForm, payment_method: e.target.value })}>
-                                {PAYMENT_METHODS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
-                              </select>
-                            </td>
-                            <td className="px-3 py-1.5">
-                              <select className={inputClass} value={editForm.wallet_account_id} onChange={e => setEditForm({ ...editForm, wallet_account_id: e.target.value })}>
-                                <option value="">—</option>
-                                {walletAccounts.map((w: any) => <option key={w.id} value={w.id}>{w.name}</option>)}
-                              </select>
-                            </td>
-                            <td className="px-3 py-1.5"><input className={inputClass + " text-right"} type="number" value={editForm.amount} onChange={e => setEditForm({ ...editForm, amount: e.target.value })} /></td>
-                            <td className="px-3 py-1.5 text-right">
-                              <button onClick={saveEdit} className="text-emerald mr-2"><Save className="h-4 w-4" /></button>
-                              <button onClick={() => setEditingId(null)} className="text-muted-foreground"><X className="h-4 w-4" /></button>
-                            </td>
-                          </tr>
-                        ) : (
-                          <tr key={entry.id} className="border-b border-border hover:bg-secondary/30">
-                            <td className="px-4 py-2.5 font-medium">{entry.description}{entry.notes && <span className="text-xs text-muted-foreground ml-2">({entry.notes})</span>}</td>
-                            <td className="px-4 py-2.5 text-xs">{getCategoryLabel(entry.type, entry.category)}</td>
-                            <td className="px-4 py-2.5 text-xs">{PAYMENT_METHODS.find(p => p.value === entry.payment_method)?.label || "—"}</td>
-                            <td className="px-4 py-2.5 text-xs">{entry.wallet_account_id ? getWalletName(entry.wallet_account_id) : "—"}</td>
-                            <td className="px-4 py-2.5 text-right font-bold text-emerald">{fmt(entry.amount)}</td>
-                            {canModify && (
-                              <td className="px-4 py-2.5 text-right">
-                                <button onClick={() => startEdit(entry)} className="text-amber-400 mr-2"><Edit2 className="h-3.5 w-3.5" /></button>
-                                <button onClick={() => setDeleteId(entry.id)} className="text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
-                              </td>
-                            )}
-                          </tr>
-                        )
-                      ))}
-                      <tr className="bg-emerald/5 font-bold">
-                        <td colSpan={4} className="px-4 py-2 text-right text-sm">মোট জমা:</td>
-                        <td className="px-4 py-2 text-right text-emerald">{fmt(dailyIncome)}</td>
-                        {canModify && <td></td>}
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-
-            {/* Expense Section */}
-            {(viewType === "all" || viewType === "expense") && filtered.filter(e => e.type === "expense").length > 0 && (
-              <div>
-                <h4 className="text-sm font-semibold text-destructive mb-2 flex items-center gap-1"><TrendingDown className="h-4 w-4" /> খরচ ({filtered.filter(e => e.type === "expense").length})</h4>
-                <div className="bg-card border border-destructive/20 rounded-lg overflow-hidden">
-                  <table className="w-full text-sm">
-                    <thead><tr className="border-b border-border bg-secondary/50">
-                      <th className="text-left px-4 py-2 text-xs text-muted-foreground">নাম/বিবরণ</th>
-                      <th className="text-left px-4 py-2 text-xs text-muted-foreground">ক্যাটাগরি</th>
-                      <th className="text-left px-4 py-2 text-xs text-muted-foreground">পদ্ধতি</th>
-                      <th className="text-left px-4 py-2 text-xs text-muted-foreground">ওয়ালেট</th>
-                      <th className="text-right px-4 py-2 text-xs text-muted-foreground">পরিমাণ</th>
-                      {canModify && <th className="text-right px-4 py-2 text-xs text-muted-foreground">অ্যাকশন</th>}
-                    </tr></thead>
-                    <tbody>
-                      {filtered.filter(e => e.type === "expense").map(entry => (
-                        editingId === entry.id ? (
-                          <tr key={entry.id} className="border-b border-border">
-                            <td className="px-3 py-1.5"><input className={inputClass} value={editForm.description} onChange={e => setEditForm({ ...editForm, description: e.target.value })} /></td>
-                            <td className="px-3 py-1.5">
-                              <select className={inputClass} value={editForm.category} onChange={e => setEditForm({ ...editForm, category: e.target.value })}>
-                                {EXPENSE_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-                              </select>
-                            </td>
-                            <td className="px-3 py-1.5">
-                              <select className={inputClass} value={editForm.payment_method} onChange={e => setEditForm({ ...editForm, payment_method: e.target.value })}>
-                                {PAYMENT_METHODS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
-                              </select>
-                            </td>
-                            <td className="px-3 py-1.5">
-                              <select className={inputClass} value={editForm.wallet_account_id} onChange={e => setEditForm({ ...editForm, wallet_account_id: e.target.value })}>
-                                <option value="">—</option>
-                                {walletAccounts.map((w: any) => <option key={w.id} value={w.id}>{w.name}</option>)}
-                              </select>
-                            </td>
-                            <td className="px-3 py-1.5"><input className={inputClass + " text-right"} type="number" value={editForm.amount} onChange={e => setEditForm({ ...editForm, amount: e.target.value })} /></td>
-                            <td className="px-3 py-1.5 text-right">
-                              <button onClick={saveEdit} className="text-emerald mr-2"><Save className="h-4 w-4" /></button>
-                              <button onClick={() => setEditingId(null)} className="text-muted-foreground"><X className="h-4 w-4" /></button>
-                            </td>
-                          </tr>
-                        ) : (
-                          <tr key={entry.id} className="border-b border-border hover:bg-secondary/30">
-                            <td className="px-4 py-2.5 font-medium">{entry.description}{entry.notes && <span className="text-xs text-muted-foreground ml-2">({entry.notes})</span>}</td>
-                            <td className="px-4 py-2.5 text-xs">{getCategoryLabel(entry.type, entry.category)}</td>
-                            <td className="px-4 py-2.5 text-xs">{PAYMENT_METHODS.find(p => p.value === entry.payment_method)?.label || "—"}</td>
-                            <td className="px-4 py-2.5 text-xs">{entry.wallet_account_id ? getWalletName(entry.wallet_account_id) : "—"}</td>
-                            <td className="px-4 py-2.5 text-right font-bold text-destructive">{fmt(entry.amount)}</td>
-                            {canModify && (
-                              <td className="px-4 py-2.5 text-right">
-                                <button onClick={() => startEdit(entry)} className="text-amber-400 mr-2"><Edit2 className="h-3.5 w-3.5" /></button>
-                                <button onClick={() => setDeleteId(entry.id)} className="text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
-                              </td>
-                            )}
-                          </tr>
-                        )
-                      ))}
-                      <tr className="bg-destructive/5 font-bold">
-                        <td colSpan={4} className="px-4 py-2 text-right text-sm">মোট খরচ:</td>
-                        <td className="px-4 py-2 text-right text-destructive">{fmt(dailyExpense)}</td>
-                        {canModify && <td></td>}
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-          </>
-        )}
+        ))}
+        {filtered.length === 0 && <p className="text-center text-muted-foreground py-12">No entries found for this date.</p>}
       </div>
     </div>
   );

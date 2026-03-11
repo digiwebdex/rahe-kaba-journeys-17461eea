@@ -20,7 +20,7 @@ import {
 import AdminActionMenu, { ActionItem } from "@/components/admin/AdminActionMenu";
 import { normalizePhone, getPhoneError, handlePhoneChange } from "@/lib/phoneValidation";
 
-const fmt = (n: number) => `৳${Number(n || 0).toLocaleString()}`;
+const fmt = (n: number) => `BDT ${Number(n || 0).toLocaleString()}`;
 const PAGE_SIZE = 15;
 
 const inputClass =

@@ -12,7 +12,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, Package } from "lucide-react";
 
-const fmt = (n: number) => `৳${Number(n || 0).toLocaleString()}`;
+const fmt = (n: number) => `BDT ${Number(n || 0).toLocaleString()}`;
 
 interface SupplierItem {
   id: string;
@@ -45,13 +45,13 @@ export default function SupplierItemsManager({ supplierId, items, isViewer, onRe
 
   const handleSave = async () => {
     if (!form.description.trim()) {
-      toast({ title: "বিবরণ দিন", variant: "destructive" });
+      toast({ title: "Enter a description", variant: "destructive" });
       return;
     }
     const qty = parseFloat(form.quantity) || 0;
     const price = parseFloat(form.unit_price) || 0;
     if (qty <= 0 || price <= 0) {
-      toast({ title: "সংখ্যা ও দর সঠিকভাবে দিন", variant: "destructive" });
+      toast({ title: "Enter valid quantity and price", variant: "destructive" });
       return;
     }
     setSaving(true);
@@ -65,12 +65,12 @@ export default function SupplierItemsManager({ supplierId, items, isViewer, onRe
 
     if (editId) {
       const { error } = await supabase.from("supplier_agent_items").update(payload).eq("id", editId);
-      if (error) { toast({ title: "আপডেট ব্যর্থ", description: error.message, variant: "destructive" }); setSaving(false); return; }
-      toast({ title: "আইটেম আপডেট হয়েছে" });
+      if (error) { toast({ title: "Update failed", description: error.message, variant: "destructive" }); setSaving(false); return; }
+      toast({ title: "Item updated" });
     } else {
       const { error } = await supabase.from("supplier_agent_items").insert(payload);
-      if (error) { toast({ title: "তৈরি ব্যর্থ", description: error.message, variant: "destructive" }); setSaving(false); return; }
-      toast({ title: "আইটেম যোগ হয়েছে" });
+      if (error) { toast({ title: "Creation failed", description: error.message, variant: "destructive" }); setSaving(false); return; }
+      toast({ title: "Item added" });
     }
     setSaving(false);
     setShowForm(false);
@@ -92,8 +92,8 @@ export default function SupplierItemsManager({ supplierId, items, isViewer, onRe
   const handleDelete = async () => {
     if (!deleteId) return;
     const { error } = await supabase.from("supplier_agent_items").delete().eq("id", deleteId);
-    if (error) { toast({ title: "মুছতে ব্যর্থ", description: error.message, variant: "destructive" }); return; }
-    toast({ title: "আইটেম মুছে ফেলা হয়েছে" });
+    if (error) { toast({ title: "Delete failed", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "Item deleted" });
     setDeleteId(null);
     onRefresh();
   };
@@ -106,13 +106,13 @@ export default function SupplierItemsManager({ supplierId, items, isViewer, onRe
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base flex items-center gap-2">
-              <Package className="h-4 w-4 text-primary" /> সার্ভিস / আইটেম ({items.length})
+              <Package className="h-4 w-4 text-primary" /> Services / Items ({items.length})
             </CardTitle>
             <div className="flex items-center gap-2">
-              <span className="text-sm font-bold">মোট: {fmt(grandTotal)}</span>
+              <span className="text-sm font-bold">Total: {fmt(grandTotal)}</span>
               {!isViewer && (
                 <Button size="sm" onClick={() => { setForm(emptyForm); setEditId(null); setShowForm(true); }}>
-                  <Plus className="h-4 w-4 mr-1" /> আইটেম যোগ
+                  <Plus className="h-4 w-4 mr-1" /> Add Item
                 </Button>
               )}
             </div>
@@ -120,18 +120,18 @@ export default function SupplierItemsManager({ supplierId, items, isViewer, onRe
         </CardHeader>
         <CardContent>
           {items.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-6">কোনো আইটেম নেই — সার্ভিস/আইটেম যোগ করুন</p>
+            <p className="text-sm text-muted-foreground text-center py-6">No items yet — add services/items</p>
           ) : (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/40">
                     <TableHead className="w-10 text-center">SL</TableHead>
-                    <TableHead>বিবরণ</TableHead>
-                    <TableHead className="text-right">সংখ্যা</TableHead>
-                    <TableHead className="text-right">দর (৳)</TableHead>
-                    <TableHead className="text-right">মোট (৳)</TableHead>
-                    {!isViewer && <TableHead className="text-center w-20">অ্যাকশন</TableHead>}
+                    <TableHead>Description</TableHead>
+                    <TableHead className="text-right">Qty</TableHead>
+                    <TableHead className="text-right">Rate (BDT)</TableHead>
+                    <TableHead className="text-right">Total (BDT)</TableHead>
+                    {!isViewer && <TableHead className="text-center w-20">Actions</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -156,9 +156,8 @@ export default function SupplierItemsManager({ supplierId, items, isViewer, onRe
                       )}
                     </TableRow>
                   ))}
-                  {/* Grand Total Row */}
                   <TableRow className="bg-muted/60 font-bold">
-                    <TableCell colSpan={4} className="text-right">মোট =</TableCell>
+                    <TableCell colSpan={4} className="text-right">Grand Total =</TableCell>
                     <TableCell className="text-right text-primary">{fmt(grandTotal)}</TableCell>
                     {!isViewer && <TableCell />}
                   </TableRow>
@@ -173,35 +172,35 @@ export default function SupplierItemsManager({ supplierId, items, isViewer, onRe
       <Dialog open={showForm} onOpenChange={o => { if (!o) { setShowForm(false); setEditId(null); } }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{editId ? "আইটেম সম্পাদনা" : "নতুন আইটেম/সার্ভিস যোগ"}</DialogTitle>
-            <DialogDescription>সার্ভিস বা আইটেমের তথ্য দিন</DialogDescription>
+            <DialogTitle>{editId ? "Edit Item" : "Add New Item/Service"}</DialogTitle>
+            <DialogDescription>Enter the service or item details</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <div>
-              <label className="text-sm font-medium">বিবরণ *</label>
-              <Input value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="যেমন: উমরাহ ভিসা, টিকেট লোকাল বিমান..." />
+              <label className="text-sm font-medium">Description *</label>
+              <Input value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="e.g. Umrah Visa, Local Flight Ticket..." />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-sm font-medium">সংখ্যা *</label>
+                <label className="text-sm font-medium">Quantity *</label>
                 <Input type="number" min="0" step="1" value={form.quantity} onChange={e => setForm({ ...form, quantity: e.target.value })} placeholder="0" />
               </div>
               <div>
-                <label className="text-sm font-medium">দর (প্রতি ইউনিট) *</label>
+                <label className="text-sm font-medium">Unit Price *</label>
                 <Input type="number" min="0" value={form.unit_price} onChange={e => setForm({ ...form, unit_price: e.target.value })} placeholder="0" />
               </div>
             </div>
             {computedTotal > 0 && (
               <div className="bg-muted/50 rounded-lg p-3 text-center">
-                <p className="text-xs text-muted-foreground">মোট পরিমাণ</p>
+                <p className="text-xs text-muted-foreground">Total Amount</p>
                 <p className="text-xl font-bold text-primary">{fmt(computedTotal)}</p>
                 <p className="text-xs text-muted-foreground">{form.quantity} × {fmt(parseFloat(form.unit_price) || 0)}</p>
               </div>
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setShowForm(false); setEditId(null); }}>বাতিল</Button>
-            <Button onClick={handleSave} disabled={saving}>{saving ? "সেভ হচ্ছে..." : editId ? "আপডেট" : "যোগ করুন"}</Button>
+            <Button variant="outline" onClick={() => { setShowForm(false); setEditId(null); }}>Cancel</Button>
+            <Button onClick={handleSave} disabled={saving}>{saving ? "Saving..." : editId ? "Update" : "Add"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -210,12 +209,12 @@ export default function SupplierItemsManager({ supplierId, items, isViewer, onRe
       <Dialog open={!!deleteId} onOpenChange={o => { if (!o) setDeleteId(null); }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>আইটেম মুছে ফেলতে চান?</DialogTitle>
-            <DialogDescription>এই আইটেমটি স্থায়ীভাবে মুছে ফেলা হবে।</DialogDescription>
+            <DialogTitle>Delete this item?</DialogTitle>
+            <DialogDescription>This item will be permanently deleted.</DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteId(null)}>বাতিল</Button>
-            <Button variant="destructive" onClick={handleDelete}>মুছুন</Button>
+            <Button variant="outline" onClick={() => setDeleteId(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleDelete}>Delete</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

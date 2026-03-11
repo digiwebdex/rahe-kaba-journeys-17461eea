@@ -9,7 +9,7 @@ import { Plus, Trash2, TrendingUp, TrendingDown, DollarSign } from "lucide-react
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-const fmt = (n: number) => `৳${Number(n || 0).toLocaleString()}`;
+const fmt = (n: number) => `BDT ${Number(n || 0).toLocaleString()}`;
 
 export default function AdminChartOfAccountsPage() {
   const [accounts, setAccounts] = useState<any[]>([]);

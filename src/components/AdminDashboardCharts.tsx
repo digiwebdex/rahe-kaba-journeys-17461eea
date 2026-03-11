@@ -31,7 +31,7 @@ interface Props {
   onMarkPaid: (id: string) => void;
 }
 
-const fmt = (n: number) => `৳${n.toLocaleString()}`;
+const fmt = (n: number) => `BDT ${n.toLocaleString()}`;
 const ttStyle = { backgroundColor: "hsl(220, 18%, 14%)", border: "1px solid hsl(220, 15%, 20%)", borderRadius: "8px", color: "hsl(40, 20%, 92%)", fontSize: "12px" };
 
 const AdminDashboardCharts = ({

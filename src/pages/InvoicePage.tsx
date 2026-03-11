@@ -5,7 +5,7 @@ import { generateInvoice, generateReceipt, CompanyInfo, InvoicePayment } from "@
 import { Printer, Download, Search } from "lucide-react";
 import { generateVerificationId } from "@/lib/pdfQrCode";
 
-const fmt = (n: number) => `৳${Number(n || 0).toLocaleString()}`;
+const fmt = (n: number) => `BDT ${Number(n || 0).toLocaleString()}`;
 const fmtDate = (d: string | null) => d ? new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—";
 
 export default function InvoicePage() {
