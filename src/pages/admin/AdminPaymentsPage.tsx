@@ -824,9 +824,9 @@ export default function AdminPaymentsPage() {
             {/* Supplier selection */}
             {paymentType === "supplier" && (
               <div>
-                <label className="text-xs text-muted-foreground block mb-1">সাপ্লায়ার এজেন্ট নির্বাচন *</label>
+                <label className="text-xs text-muted-foreground block mb-1">Select Supplier Agent *</label>
                 <select className={inputClass} value={addForm.supplier_id} onChange={(e) => handleSupplierChange(e.target.value)}>
-                  <option value="">-- সাপ্লায়ার বাছাই করুন --</option>
+                  <option value="">-- Select Supplier --</option>
                   {suppliers.map((s) => (
                     <option key={s.id} value={s.id}>{s.agent_name}{s.company_name ? ` (${s.company_name})` : ""}</option>
                   ))}
