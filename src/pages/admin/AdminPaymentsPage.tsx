@@ -606,9 +606,8 @@ export default function AdminPaymentsPage() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-border/50 text-left text-muted-foreground bg-muted/20">
-                        <th className="py-2 px-4">#</th>
-                        <th className="py-2 px-4">Booking</th>
-                        <th className="py-2 px-4">Amount</th>
+                         <th className="py-2 px-4">#</th>
+                         <th className="py-2 px-4">Amount</th>
                         <th className="py-2 px-4">Method</th>
                         <th className="py-2 px-4">Service Type</th>
                         <th className="py-2 px-4">Date</th>
