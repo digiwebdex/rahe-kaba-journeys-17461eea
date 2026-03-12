@@ -221,32 +221,51 @@ export default function AdminBookingsPage() {
   }, [searchParams]);
 
   const startEdit = async (b: any) => {
+    const normalizedType = normalizeBookingType(b.booking_type) || "individual";
+
     setEditingId(b.id);
     setEditForm({
-      status: b.status, selling_price_per_person: Number(b.selling_price_per_person || 0),
-      cost_price_per_person: Number(b.cost_price_per_person || 0), extra_expense: Number(b.extra_expense || 0),
+      status: b.status,
+      selling_price_per_person: Number(b.selling_price_per_person || 0),
+      cost_price_per_person: Number(b.cost_price_per_person || 0),
+      extra_expense: Number(b.extra_expense || 0),
       commission_per_person: Number(b.commission_per_person || 0),
       notes: b.notes || "",
-      num_travelers: b.num_travelers, paid_amount: Number(b.paid_amount || 0),
-      guest_name: b.guest_name || "", guest_phone: b.guest_phone || "",
-      guest_email: b.guest_email || "", guest_address: b.guest_address || "",
-      guest_passport: b.guest_passport || "", user_id: b.user_id || null,
+      num_travelers: Number(b.num_travelers || 1),
+      paid_amount: Number(b.paid_amount || 0),
+      guest_name: b.guest_name || "",
+      guest_phone: b.guest_phone || "",
+      guest_email: b.guest_email || "",
+      guest_address: b.guest_address || "",
+      guest_passport: b.guest_passport || "",
+      user_id: b.user_id || null,
       moallem_id: b.moallem_id || "",
-      booking_type: b.booking_type || "individual",
+      booking_type: normalizedType,
     });
-    // Load family members if family booking
-    if (b.booking_type === "family") {
-      const { data } = await supabase.from("booking_members")
-        .select("*, packages(name)")
-        .eq("booking_id", b.id)
-        .order("created_at", { ascending: true });
-      setEditMembers(data || []);
-    } else {
-      setEditMembers([]);
+
+    const { data: membersData, error: membersError } = await supabase
+      .from("booking_members")
+      .select("id, booking_id, package_id, full_name, passport_number, selling_price, discount, final_price, created_at")
+      .eq("booking_id", b.id)
+      .order("created_at", { ascending: true });
+
+    if (membersError) {
+      console.error("startEdit booking_members load error:", membersError);
+    }
+
+    const members = membersData || [];
+    setEditMembers(members);
+
+    if (isFamilyBooking(normalizedType, members.length)) {
+      setEditForm((prev: any) => ({
+        ...prev,
+        booking_type: "family",
+        num_travelers: Math.max(members.length, Number(prev.num_travelers || 1), 1),
+      }));
     }
   };
 
-  const isEditingFamily = editForm.booking_type === "family" && editMembers.length > 0;
+  const isEditingFamily = isFamilyBooking(editForm.booking_type, editMembers.length);
   const editTotalSelling = editingId
     ? (isEditingFamily ? editMembers.reduce((s: number, m: any) => s + Number(m.final_price || 0), 0) : Number(editForm.selling_price_per_person || 0) * Number(editForm.num_travelers || 1))
     : 0;
@@ -257,12 +276,14 @@ export default function AdminBookingsPage() {
 
   const saveEdit = async () => {
     if (!editingId) return;
-    const isFamily = editForm.booking_type === "family";
+    const isFamily = isFamilyBooking(editForm.booking_type, editMembers.length);
     const sellingPP = Math.max(0, parseFloat(editForm.selling_price_per_person) || 0);
     const costPP = Math.max(0, parseFloat(editForm.cost_price_per_person) || 0);
     const commPP = Math.max(0, parseFloat(editForm.commission_per_person) || 0);
     const extraExp = Math.max(0, parseFloat(editForm.extra_expense) || 0);
-    const travelers = parseInt(editForm.num_travelers) || 1;
+    const travelers = isFamily
+      ? Math.max(editMembers.length, parseInt(editForm.num_travelers) || 1, 1)
+      : (parseInt(editForm.num_travelers) || 1);
 
     // For family bookings, total comes from member sum
     let totalSelling: number;
