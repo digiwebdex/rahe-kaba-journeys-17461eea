@@ -222,7 +222,7 @@ export default function AdminCalculatorPage() {
         doc.setFontSize(8);
         doc.setTextColor(255);
         doc.setFont("helvetica", "normal");
-        doc.text("Alhamdulillah — Total Profit", pageWidth / 2, y + 5, { align: "center" });
+        doc.text("Total Profit", pageWidth / 2, y + 5, { align: "center" });
         doc.setFontSize(14);
         doc.setFont("helvetica", "bold");
         doc.text(fmt(totalProfit), pageWidth / 2, y + 12, { align: "center" });
