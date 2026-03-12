@@ -243,9 +243,6 @@ export default function AdminCalculatorPage() {
           <Calculator className="h-5 w-5 text-primary" />
           Group Cost Calculator
         </h1>
-        <Button size="sm" variant="outline" onClick={handleDownloadPdf}>
-          <FileDown className="h-4 w-4 mr-1" /> Download PDF
-        </Button>
       </div>
 
       {/* Group Info */}
