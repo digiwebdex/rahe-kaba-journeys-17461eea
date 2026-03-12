@@ -146,6 +146,16 @@ const toPackageShortLabel = (value: string): string => {
   return `${label.slice(0, 17)}…`;
 };
 
+const extractDelimitedValues = (value?: string | null): string[] => {
+  const source = cleanText(value);
+  if (!source) return [];
+
+  return source
+    .split(/[\n,;|/]+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+};
+
 async function fetchPackageNameMap(packageIds: string[]): Promise<Record<string, string>> {
   const uniqueIds = Array.from(new Set(packageIds.filter(Boolean)));
   if (uniqueIds.length === 0) return {};
