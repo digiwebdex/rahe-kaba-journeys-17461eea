@@ -772,15 +772,21 @@ async function generateFamilyInvoice(
     startY: y,
     head: [["SL", "Name", "Passport", "Package", "Price (BDT)", "Discount (BDT)", "Final (BDT)"]],
     body: [
-      ...members.map((m, i) => [
-        String(i + 1),
-        m.full_name,
-        m.passport_number || "—",
-        m.packages?.name || booking.packages?.name || "N/A",
-        formatAmount(Number(m.selling_price)),
-        formatAmount(Number(m.discount)),
-        formatAmount(Number(m.final_price)),
-      ]),
+      ...members.map((m, i) => {
+        const name = cleanText(m.full_name, i === 0 ? customer.full_name : "", `Traveler ${i + 1}`);
+        const passport = cleanText(m.passport_number, i === 0 ? customer.passport_number : "", "—");
+        const pkg = toPackageShortLabel(cleanText(m.packages?.name, booking.packages?.name, "N/A"));
+
+        return [
+          String(i + 1),
+          name,
+          passport,
+          pkg,
+          formatAmount(Number(m.selling_price)),
+          formatAmount(Number(m.discount)),
+          formatAmount(Number(m.final_price)),
+        ];
+      }),
     ],
     foot: [[
       "", "", "", "TOTAL",
@@ -788,7 +794,7 @@ async function generateFamilyInvoice(
       formatAmount(totalDiscount),
       formatAmount(totalFinal),
     ]],
-    styles: { fontSize: 7.5, cellPadding: 2.5, font: "NotoSansBengali" },
+    styles: { fontSize: 7.5, cellPadding: 2.5, font: "helvetica" },
     headStyles: {
       fillColor: [DARK.r, DARK.g, DARK.b],
       textColor: [255, 255, 255],
