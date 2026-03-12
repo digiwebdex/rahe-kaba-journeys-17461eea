@@ -174,6 +174,8 @@ export default function AdminBookingsPage() {
   const [searchParams] = useSearchParams();
   const isViewer = useIsViewer();
   const [bookings, setBookings] = useState<any[]>([]);
+  const [bookingsLoading, setBookingsLoading] = useState(true);
+  const [bookingsError, setBookingsError] = useState<string | null>(null);
   const [moallems, setMoallems] = useState<any[]>([]);
   const [generatingId, setGeneratingId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -189,13 +191,27 @@ export default function AdminBookingsPage() {
   const [bookingPayments, setBookingPayments] = useState<Record<string, any[]>>({});
   const [editMembers, setEditMembers] = useState<any[]>([]);
 
-  const fetchBookings = () =>
-    supabase.from("bookings").select("*, packages(name, type, duration_days, price, start_date), moallems(name, phone)")
-      .order("created_at", { ascending: false })
-      .then(({ data, error }) => {
-        if (error) console.error("fetchBookings error:", error);
-        setBookings(data || []);
-      });
+  const fetchBookings = async () => {
+    setBookingsLoading(true);
+
+    const { data, error } = await supabase
+      .from("bookings")
+      .select("*, packages(name, type, duration_days, price, start_date), moallems(name, phone)")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("fetchBookings error:", error);
+      const message = error.message || "Failed to load bookings";
+      setBookingsError(message);
+      setBookings([]);
+      setBookingsLoading(false);
+      return;
+    }
+
+    setBookings(Array.isArray(data) ? data : []);
+    setBookingsError(null);
+    setBookingsLoading(false);
+  };
 
   const fetchAllPayments = () =>
     supabase.from("payments").select("id, booking_id, amount, paid_at, payment_method, status")
@@ -873,7 +889,10 @@ export default function AdminBookingsPage() {
           )}
         </div>
       ))}
-      {filtered.length === 0 && <p className="text-center text-muted-foreground py-12">No bookings found.</p>}
+      {bookingsLoading && <p className="text-center text-muted-foreground py-12">Loading bookings...</p>}
+      {!bookingsLoading && filtered.length === 0 && (
+        <p className="text-center text-muted-foreground py-12">{bookingsError ? `Failed to load bookings: ${bookingsError}` : "No bookings found."}</p>
+      )}
 
       {/* View Booking Modal */}
       <Dialog open={!!viewBooking} onOpenChange={(o) => { if (!o) setViewBooking(null); }}>
