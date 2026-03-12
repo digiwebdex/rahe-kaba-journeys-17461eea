@@ -64,7 +64,7 @@ export default function AdminMoallemProfilePage() {
   // Edit/Delete payment state
   const [editPaymentId, setEditPaymentId] = useState<string | null>(null);
   const [editPaymentType, setEditPaymentType] = useState<"payment" | "commission">("payment");
-  const [editPaymentForm, setEditPaymentForm] = useState({ amount: "", payment_method: "cash", date: "", notes: "" });
+  const [editPaymentForm, setEditPaymentForm] = useState({ amount: "", payment_method: "cash", date: "", notes: "", service_type: "", booking_id: "", wallet_account_id: "" });
   const [showEditPaymentModal, setShowEditPaymentModal] = useState(false);
   const [deletePaymentId, setDeletePaymentId] = useState<string | null>(null);
   const [deletePaymentType, setDeletePaymentType] = useState<"payment" | "commission">("payment");
@@ -165,16 +165,30 @@ export default function AdminMoallemProfilePage() {
   const startEditPayment = (p: any, type: "payment" | "commission") => {
     setEditPaymentId(p.id);
     setEditPaymentType(type);
-    setEditPaymentForm({ amount: String(p.amount), payment_method: p.payment_method || "cash", date: p.date || "", notes: p.notes || "" });
+    // Extract service from notes
+    const noteParts = (p.notes || "").split(" — ");
+    const foundService = SERVICE_TYPES.find(s => s.label === noteParts[0]);
+    const serviceType = foundService ? foundService.value : "";
+    const restNotes = foundService ? noteParts.slice(1).join(" — ") : (p.notes || "");
+    setEditPaymentForm({
+      amount: String(p.amount), payment_method: p.payment_method || "cash",
+      date: p.date || "", notes: restNotes,
+      service_type: serviceType, booking_id: p.booking_id || "",
+      wallet_account_id: p.wallet_account_id || "",
+    });
     setShowEditPaymentModal(true);
   };
 
   const handleSavePaymentEdit = async () => {
     if (!editPaymentId) return;
     const table = editPaymentType === "commission" ? "moallem_commission_payments" : "moallem_payments";
+    const serviceLabel = SERVICE_TYPES.find(s => s.value === editPaymentForm.service_type)?.label || "";
+    const combinedNotes = [serviceLabel, editPaymentForm.notes.trim()].filter(Boolean).join(" — ");
     const { error } = await (supabase as any).from(table).update({
       amount: parseFloat(editPaymentForm.amount), payment_method: editPaymentForm.payment_method,
-      date: editPaymentForm.date || undefined, notes: editPaymentForm.notes || null,
+      date: editPaymentForm.date || undefined, notes: combinedNotes || null,
+      booking_id: editPaymentForm.booking_id || null,
+      wallet_account_id: editPaymentForm.wallet_account_id || null,
     }).eq("id", editPaymentId);
     if (error) { toast({ title: "Update failed", description: error.message, variant: "destructive" }); return; }
     toast({ title: "Payment updated successfully" });
@@ -710,6 +724,11 @@ export default function AdminMoallemProfilePage() {
         <DialogContent>
           <DialogHeader><DialogTitle>{editPaymentType === "commission" ? "Edit Commission Payment" : "Edit Payment"}</DialogTitle><DialogDescription>Modify payment details</DialogDescription></DialogHeader>
           <div className="space-y-3">
+            <div><label className="text-xs text-muted-foreground block mb-1">Service Type</label>
+              <Select value={editPaymentForm.service_type || ""} onValueChange={(v) => setEditPaymentForm({ ...editPaymentForm, service_type: v })}>
+                <SelectTrigger><SelectValue placeholder="-- Select Service --" /></SelectTrigger>
+                <SelectContent>{SERVICE_TYPES.filter(s => s.value).map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
+              </Select></div>
             <div><label className="text-xs text-muted-foreground block mb-1">Amount (BDT) *</label>
               <Input type="number" min={0} value={editPaymentForm.amount} onChange={(e) => setEditPaymentForm({ ...editPaymentForm, amount: e.target.value })} /></div>
             <div><label className="text-xs text-muted-foreground block mb-1">Method</label>
@@ -719,6 +738,16 @@ export default function AdminMoallemProfilePage() {
               </Select></div>
             <div><label className="text-xs text-muted-foreground block mb-1">Date</label>
               <Input type="date" value={editPaymentForm.date} onChange={(e) => setEditPaymentForm({ ...editPaymentForm, date: e.target.value })} /></div>
+            <div><label className="text-xs text-muted-foreground block mb-1">Booking (Optional)</label>
+              <select className="w-full bg-secondary border border-border rounded-md px-3 py-2 text-sm" value={editPaymentForm.booking_id} onChange={(e) => setEditPaymentForm({ ...editPaymentForm, booking_id: e.target.value })}>
+                <option value="">-- No Booking --</option>
+                {bookings.map(b => <option key={b.id} value={b.id}>{b.tracking_id} — {b.guest_name || "—"}</option>)}
+              </select></div>
+            <div><label className="text-xs text-muted-foreground block mb-1">Wallet Account</label>
+              <select className="w-full bg-secondary border border-border rounded-md px-3 py-2 text-sm" value={editPaymentForm.wallet_account_id} onChange={(e) => setEditPaymentForm({ ...editPaymentForm, wallet_account_id: e.target.value })}>
+                <option value="">-- No Account --</option>
+                {walletAccounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+              </select></div>
             <div><label className="text-xs text-muted-foreground block mb-1">Notes</label>
               <Input value={editPaymentForm.notes} onChange={(e) => setEditPaymentForm({ ...editPaymentForm, notes: e.target.value })} /></div>
           </div>
