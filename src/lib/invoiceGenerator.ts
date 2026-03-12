@@ -33,7 +33,8 @@ export interface InvoiceBooking {
   status: string;
   booking_type?: string;
   moallem_id?: string | null;
-  packages?: { name: string; type?: string; duration_days?: number | null; start_date?: string | null } | null;
+  package_id?: string | null;
+  packages?: { name: string; type?: string; duration_days?: number | null; start_date?: string | null; price?: number | null } | null;
   selling_price_per_person?: number | null;
   notes?: string | null;
 }
@@ -60,7 +61,14 @@ export interface BookingMember {
 }
 
 // ── Helpers ──
-const fmt = (n: number) => `BDT ${n.toLocaleString()}`;
+const formatAmount = (value: number) => {
+  const numericValue = Number(value || 0);
+  return numericValue.toLocaleString("en-IN", {
+    minimumFractionDigits: Number.isInteger(numericValue) ? 0 : 2,
+    maximumFractionDigits: 2,
+  });
+};
+const fmt = (n: number) => `BDT ${formatAmount(n)}`;
 const fmtDate = (d: string | null) =>
   d ? new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—";
 
@@ -180,10 +188,16 @@ function buildFallbackMembers(booking: InvoiceBooking, customer: InvoiceCustomer
   const travelerCount = Math.max(Number(booking.num_travelers || 0), 0);
   if (travelerCount <= 1) return [];
 
-  const totalFinalCents = Math.max(0, Math.round(Number(booking.total_amount || 0) * 100));
-  const totalDiscountCents = Math.max(0, Math.round(Number(booking.discount || 0) * 100));
-  const totalGrossCents = totalFinalCents + totalDiscountCents;
-  const packageName = booking.packages?.name || "N/A";
+  const packageName = cleanText(booking.packages?.name, "N/A");
+  const unitPriceHint = Math.max(
+    0,
+    Number(booking.selling_price_per_person || 0),
+    Number(booking.packages?.price || 0)
+  );
+
+  const roundedTotal = Math.max(0, Math.round(Number(booking.total_amount || 0)));
+  const roundedDiscount = Math.max(0, Math.round(Number(booking.discount || 0)));
+  const roundedGross = roundedTotal + roundedDiscount;
 
   const distribute = (total: number, count: number, index: number) => {
     const base = Math.floor(total / count);
@@ -192,18 +206,18 @@ function buildFallbackMembers(booking: InvoiceBooking, customer: InvoiceCustomer
   };
 
   return Array.from({ length: travelerCount }, (_, index) => {
-    const grossCents = distribute(totalGrossCents, travelerCount, index);
-    const discountCents = distribute(totalDiscountCents, travelerCount, index);
-    const finalCents = Math.max(0, grossCents - discountCents);
+    const gross = unitPriceHint > 0 ? Math.round(unitPriceHint) : distribute(roundedGross, travelerCount, index);
+    const discount = distribute(roundedDiscount, travelerCount, index);
+    const final = Math.max(0, gross - discount);
 
     return {
-      full_name: index === 0 ? (customer.full_name || "Primary Traveler") : `Traveler ${index + 1}`,
-      passport_number: index === 0 ? (customer.passport_number || null) : null,
-      selling_price: grossCents / 100,
-      discount: discountCents / 100,
-      final_price: finalCents / 100,
+      full_name: index === 0 ? cleanText(customer.full_name, "Primary Traveler") : `Traveler ${index + 1}`,
+      passport_number: index === 0 ? (cleanText(customer.passport_number) || null) : null,
+      selling_price: gross,
+      discount,
+      final_price: final,
       packages: { name: packageName },
-      package_id: null,
+      package_id: booking.package_id || null,
     };
   });
 }
@@ -505,14 +519,14 @@ function addPaymentHistoryTable(doc: jsPDF, y: number, payments: InvoicePayment[
       String(i + 1),
       fmtDate(p.paid_at),
       (p.payment_method || "Manual").charAt(0).toUpperCase() + (p.payment_method || "manual").slice(1),
-      Number(p.amount).toLocaleString(),
+      formatAmount(Number(p.amount)),
       "Paid",
     ]),
     ...pending.map((p, i) => [
       String(completed.length + i + 1),
       p.due_date ? fmtDate(p.due_date) + " (Due)" : "—",
       "—",
-      Number(p.amount).toLocaleString(),
+      formatAmount(Number(p.amount)),
       "Pending",
     ]),
   ];
@@ -521,7 +535,7 @@ function addPaymentHistoryTable(doc: jsPDF, y: number, payments: InvoicePayment[
     startY: y,
     head: [["#", "Date", "Method", "Amount (BDT)", "Status"]],
     body: bodyRows,
-    foot: completed.length > 0 ? [["", "", "Total Paid", totalPaid.toLocaleString(), ""]] : undefined,
+    foot: completed.length > 0 ? [["", "", "Total Paid", formatAmount(totalPaid), ""]] : undefined,
     styles: { fontSize: 7.5, cellPadding: 2.5, font: "NotoSansBengali" },
     headStyles: {
       fillColor: [DARK.r, DARK.g, DARK.b],
@@ -679,9 +693,9 @@ async function generateIndividualInvoice(
       [
         booking.packages?.name || "N/A",
         String(booking.num_travelers),
-        unitPrice.toLocaleString(),
-        discount.toLocaleString(),
-        Number(booking.total_amount).toLocaleString(),
+        formatAmount(unitPrice),
+        formatAmount(discount),
+        formatAmount(Number(booking.total_amount)),
       ],
     ],
     styles: { fontSize: 8, cellPadding: 3, font: "NotoSansBengali" },
@@ -752,16 +766,16 @@ async function generateFamilyInvoice(
         m.full_name,
         m.passport_number || "—",
         m.packages?.name || booking.packages?.name || "N/A",
-        Number(m.selling_price).toLocaleString(),
-        Number(m.discount).toLocaleString(),
-        Number(m.final_price).toLocaleString(),
+        formatAmount(Number(m.selling_price)),
+        formatAmount(Number(m.discount)),
+        formatAmount(Number(m.final_price)),
       ]),
     ],
     foot: [[
       "", "", "", "TOTAL",
-      totalGross.toLocaleString(),
-      totalDiscount.toLocaleString(),
-      totalFinal.toLocaleString(),
+      formatAmount(totalGross),
+      formatAmount(totalDiscount),
+      formatAmount(totalFinal),
     ]],
     styles: { fontSize: 7.5, cellPadding: 2.5, font: "NotoSansBengali" },
     headStyles: {
@@ -831,7 +845,13 @@ export async function generateInvoice(
     moallemName = await fetchMoallemName(booking.moallem_id);
   }
 
-  const fallbackPackageName = cleanText(booking.packages?.name, "N/A");
+  let fallbackPackageName = cleanText(booking.packages?.name);
+  if (!fallbackPackageName && booking.package_id) {
+    const packageMap = await fetchPackageNameMap([booking.package_id]);
+    fallbackPackageName = cleanText(packageMap[booking.package_id]);
+  }
+  fallbackPackageName = cleanText(fallbackPackageName, "N/A");
+
   const providedMembers = normalizeMembers(options.members || [], fallbackPackageName);
   const dbMembers = providedMembers.length === 0 && booking.id
     ? await fetchBookingMembers(booking.id, fallbackPackageName)

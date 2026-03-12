@@ -460,7 +460,7 @@ export default function AdminBookingsPage() {
         supabase.from("payments").select("*").eq("booking_id", b.id).order("installment_number", { ascending: true }),
         supabase
           .from("bookings")
-          .select("*, packages(name, type, duration_days, start_date), booking_members(full_name, passport_number, selling_price, discount, final_price, package_id, packages(name))")
+          .select("*, packages(name, type, duration_days, start_date, price), booking_members(full_name, passport_number, selling_price, discount, final_price, package_id, packages(name))")
           .eq("id", b.id)
           .maybeSingle(),
         getCompanyInfoForPdf(),
