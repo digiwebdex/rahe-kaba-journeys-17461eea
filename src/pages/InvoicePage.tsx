@@ -35,7 +35,7 @@ export default function InvoicePage() {
 
     const { data: bk, error: bkErr } = await supabase
       .from("bookings")
-      .select("*, packages(name, type, duration_days)")
+      .select("*, packages(name, type, duration_days, start_date, price)")
       .eq("tracking_id", trackingId.trim().toUpperCase())
       .single();
 
