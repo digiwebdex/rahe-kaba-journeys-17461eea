@@ -188,10 +188,16 @@ function buildFallbackMembers(booking: InvoiceBooking, customer: InvoiceCustomer
   const travelerCount = Math.max(Number(booking.num_travelers || 0), 0);
   if (travelerCount <= 1) return [];
 
-  const totalFinalCents = Math.max(0, Math.round(Number(booking.total_amount || 0) * 100));
-  const totalDiscountCents = Math.max(0, Math.round(Number(booking.discount || 0) * 100));
-  const totalGrossCents = totalFinalCents + totalDiscountCents;
-  const packageName = booking.packages?.name || "N/A";
+  const packageName = cleanText(booking.packages?.name, "N/A");
+  const unitPriceHint = Math.max(
+    0,
+    Number(booking.selling_price_per_person || 0),
+    Number(booking.packages?.price || 0)
+  );
+
+  const roundedTotal = Math.max(0, Math.round(Number(booking.total_amount || 0)));
+  const roundedDiscount = Math.max(0, Math.round(Number(booking.discount || 0)));
+  const roundedGross = roundedTotal + roundedDiscount;
 
   const distribute = (total: number, count: number, index: number) => {
     const base = Math.floor(total / count);
@@ -200,18 +206,18 @@ function buildFallbackMembers(booking: InvoiceBooking, customer: InvoiceCustomer
   };
 
   return Array.from({ length: travelerCount }, (_, index) => {
-    const grossCents = distribute(totalGrossCents, travelerCount, index);
-    const discountCents = distribute(totalDiscountCents, travelerCount, index);
-    const finalCents = Math.max(0, grossCents - discountCents);
+    const gross = unitPriceHint > 0 ? Math.round(unitPriceHint) : distribute(roundedGross, travelerCount, index);
+    const discount = distribute(roundedDiscount, travelerCount, index);
+    const final = Math.max(0, gross - discount);
 
     return {
-      full_name: index === 0 ? (customer.full_name || "Primary Traveler") : `Traveler ${index + 1}`,
-      passport_number: index === 0 ? (customer.passport_number || null) : null,
-      selling_price: grossCents / 100,
-      discount: discountCents / 100,
-      final_price: finalCents / 100,
+      full_name: index === 0 ? cleanText(customer.full_name, "Primary Traveler") : `Traveler ${index + 1}`,
+      passport_number: index === 0 ? (cleanText(customer.passport_number) || null) : null,
+      selling_price: gross,
+      discount,
+      final_price: final,
       packages: { name: packageName },
-      package_id: null,
+      package_id: booking.package_id || null,
     };
   });
 }
