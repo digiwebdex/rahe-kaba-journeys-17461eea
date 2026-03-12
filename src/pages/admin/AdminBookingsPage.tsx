@@ -544,7 +544,68 @@ export default function AdminBookingsPage() {
                 </div>
               )}
 
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+              {/* Family Members Editing Section */}
+              {isEditingFamily && (
+                <div className="border border-primary/30 rounded-lg p-3 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-semibold flex items-center gap-1.5">
+                      <User className="h-4 w-4 text-primary" />
+                      Family Members ({editMembers.length})
+                    </h4>
+                    <Badge variant="outline" className="text-[10px]">Family Booking</Badge>
+                  </div>
+                  {editMembers.map((m: any, idx: number) => (
+                    <div key={m.id} className="grid grid-cols-2 sm:grid-cols-5 gap-2 bg-secondary/30 rounded-md p-2">
+                      <div>
+                        <label className="text-[10px] text-muted-foreground block mb-0.5">Name</label>
+                        <input className={inputClass + " text-xs"} value={m.full_name}
+                          onChange={(e) => {
+                            const updated = [...editMembers];
+                            updated[idx] = { ...updated[idx], full_name: e.target.value };
+                            setEditMembers(updated);
+                          }} />
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-muted-foreground block mb-0.5">Passport</label>
+                        <input className={inputClass + " text-xs"} value={m.passport_number || ""}
+                          onChange={(e) => {
+                            const updated = [...editMembers];
+                            updated[idx] = { ...updated[idx], passport_number: e.target.value };
+                            setEditMembers(updated);
+                          }} />
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-muted-foreground block mb-0.5">Selling Price</label>
+                        <input className={inputClass + " text-xs"} type="number" min={0} value={m.selling_price}
+                          onChange={(e) => {
+                            const updated = [...editMembers];
+                            const sp = Number(e.target.value) || 0;
+                            updated[idx] = { ...updated[idx], selling_price: sp, final_price: sp - Number(updated[idx].discount || 0) };
+                            setEditMembers(updated);
+                          }} />
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-muted-foreground block mb-0.5">Discount</label>
+                        <input className={inputClass + " text-xs"} type="number" min={0} value={m.discount}
+                          onChange={(e) => {
+                            const updated = [...editMembers];
+                            const d = Number(e.target.value) || 0;
+                            updated[idx] = { ...updated[idx], discount: d, final_price: Number(updated[idx].selling_price || 0) - d };
+                            setEditMembers(updated);
+                          }} />
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-muted-foreground block mb-0.5">Final Price</label>
+                        <div className={`${inputClass} bg-muted/50 font-bold text-xs`}>BDT {Number(m.final_price || 0).toLocaleString()}</div>
+                      </div>
+                    </div>
+                  ))}
+                  <div className="text-right text-xs font-bold text-primary">
+                    Members Total: BDT {editMembers.reduce((s: number, m: any) => s + Number(m.final_price || 0), 0).toLocaleString()}
+                  </div>
+                </div>
+              )}
+
                 <div>
                   <label className="text-xs text-muted-foreground block mb-1">Status</label>
                   <select className={inputClass} value={editForm.status} onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}>
