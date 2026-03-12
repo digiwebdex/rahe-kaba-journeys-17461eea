@@ -639,7 +639,7 @@ async function generateFamilyInvoice(
 
   y = addInvoiceTitleBlock(doc, y, booking.tracking_id, new Date().toISOString(), booking.packages?.start_date || null, booking.status, true);
 
-  y = await addCustomerSection(doc, y, customer, moallemName, members.length || booking.num_travelers);
+  y = await addCustomerSection(doc, y, customer, moallemName, members.length || booking.num_travelers, booking.notes);
 
   // Members table
   y = addSectionTitle(doc, y, "FAMILY MEMBERS");
