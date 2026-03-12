@@ -888,9 +888,12 @@ async function generateFamilyInvoice(
   y = ((doc as any).lastAutoTable?.finalY || y + 20) + 6;
 
   // Financial summary
-  y = addFinancialSummary(doc, y, totalGross, totalDiscount, totalFinal, Number(booking.paid_amount), Number(booking.due_amount || 0));
+  const familyDueAmount = Number(booking.due_amount || 0);
+  y = ensurePageSpace(doc, y, familyDueAmount > 0 ? 54 : 44);
+  y = addFinancialSummary(doc, y, totalGross, totalDiscount, totalFinal, Number(booking.paid_amount), familyDueAmount);
 
   // Payment history (below summary, full width)
+  y = ensurePageSpace(doc, y, 26);
   y = addPaymentHistoryTable(doc, y, payments);
 
   // Signature
